@@ -1,0 +1,22 @@
+{
+  "name": "@campj/banners",
+  "version": "1.0.0",
+  "description": "banner utilities",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/campjefferson/-campj-banners.git"
+  },
+  "keywords": [
+    "banners"
+  ],
+  "author": "Camp Jefferson Dev <dev@campjefferson.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/campjefferson/-campj-banners/issues"
+  },
+  "homepage": "https://github.com/campjefferson/-campj-banners#readme"
+}

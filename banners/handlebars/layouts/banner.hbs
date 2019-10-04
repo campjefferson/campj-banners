@@ -1,0 +1,21 @@
+<html lang="{{lang}}">
+
+<head>
+    <link rel="stylesheet" href="banner.scss">
+    <meta name="ad.size" content="width={{width}},height={{height}}">
+    {{#block "vendor" }}
+    {{> vendor/tweenmax }}
+    {{/block}}
+    {{#block "clicktag" }}
+    {{> clicktag/generic }}
+    {{/block}}
+</head>
+
+<body style="position:relative; display:block; overflow:hidden; margin:0; padding:0">
+    <div id="ad" style="position:relative; display:block; overflow:hidden; width:{{width}}px;height:{{height}}px;">
+        {{> @partial-block }}
+    </div>
+    <script src="banner.js"></script>
+</body>
+
+</html>

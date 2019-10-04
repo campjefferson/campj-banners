@@ -1,0 +1,19 @@
+.abs {
+  position: absolute;
+}
+
+#ad {
+  box-shadow: inset 0px 0px 0px 1px black;
+}
+
+#ad, #banner, #clickarea{
+  position:relative;
+  display:block;
+  margin:0;
+  padding:0;
+}
+
+@mixin position($left, $top) {
+  top: $top + 0px;
+  left: $left + 0px;
+}
