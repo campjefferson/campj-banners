@@ -1,10 +1,15 @@
 {
   "name": "@campj/banners",
-  "version": "1.0.0",
-  "description": "banner utilities",
+  "version": "1.2.5",
+  "description": "Camp Jefferson utilities for banner production",
   "main": "index.js",
   "scripts": {
+    "parcel:help": "parcel help build",
     "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "bin": {
+    "campj-banners-dev": "./cli-dev.js",
+    "campj-banners-build": "./cli-build.js"
   },
   "repository": {
     "type": "git",
@@ -18,5 +23,28 @@
   "bugs": {
     "url": "https://github.com/campjefferson/-campj-banners/issues"
   },
-  "homepage": "https://github.com/campjefferson/-campj-banners#readme"
+  "homepage": "https://github.com/campjefferson/-campj-banners#readme",
+  "dependencies": {
+    "bluebird": "^3.7.1",
+    "camelcase": "^5.3.1",
+    "fs-extra": "^8.1.0",
+    "gifencoder": "^2.0.1",
+    "glob": "^7.1.4",
+    "glob-watcher": "^5.0.3",
+    "gray-matter": "^4.0.2",
+    "node-cmd": "^3.0.0",
+    "parcel-bundler": "^1.12.3",
+    "parcel-plugin-handlebars": "^0.4.4",
+    "parcel-plugin-imagemin": "^3.0.0",
+    "parcel-plugin-inliner": "^1.0.10",
+    "png-js": "^0.1.1",
+    "puppeteer": "^1.20.0",
+    "sass": "^1.23.1",
+    "spritesmith": "^3.4.0",
+    "yazl": "^2.5.1"
+  },
+  "browserslist": [
+    "last 2 Chrome versions",
+    "ie 11"
+  ]
 }

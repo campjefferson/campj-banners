@@ -2,9 +2,10 @@ const glob = require('glob');
 const fs = require('fs-extra');
 const path = require('path');
 
+const rootDir = `${process.env.PROJECT_DIR}/dist`;
+
 module.exports = async () => {
-  const rootDir = path.resolve('./dist');
-  const files = glob.sync('./dist/*/*.html');
+  const files = glob.sync(`${rootDir}/*/*.html`);
   for (let i = 0; i < files.length; i++) {
     let file = fs.readFileSync(files[i], `utf-8`);
     let dir = path.dirname(files[i]);

@@ -1,0 +1,5 @@
+{
+    "mangle":{
+        "reserved":["clickTag", "clickTAG", "clickarea", "exit"]    
+    }
+}
