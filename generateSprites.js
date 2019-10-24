@@ -61,6 +61,7 @@ function getNameAndResolution(n, list) {
 }
 
 function outputSass(item, spriteWidth, spriteHeight) {
+  // console.log(item.assetProps);
   const res = item.assetProps ? item.assetProps.exportScale : item.resolution;
   const w = Math.ceil(item.width / res);
   const h = Math.ceil(item.height / res);

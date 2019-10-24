@@ -20,8 +20,7 @@ process.chdir(__dirname);
 const bundles = [
   `${wd}/src/**/index.hbs`,
   `!${wd}/src/**/sprite-*.png`,
-  `!${wd}/src/**/sprite/*`,
-  `!${wd}/src/**/sprite.scss`
+  `!${wd}/src/**/sprite/*`
 ];
 
 const bundler = new Bundler(bundles, {

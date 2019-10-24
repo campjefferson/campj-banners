@@ -1,5 +1,5 @@
 const glob = require('glob');
-const fs = require('fs');
+const fs = require('fs-extra');
 const path = require('path');
 const pkg = require(process.env.PROJECT_DIR + '/package.json');
 const config = pkg.config;
@@ -31,7 +31,17 @@ module.exports = (archiveName = null) => {
 
   // get published banner directories
   const rootPath = path.resolve(process.env.PROJECT_DIR, `./dist`);
+  const rootSrc = path.resolve(process.env.PROJECT_DIR, `./src`);
   let dirs = glob.sync(`${rootPath}/*/`);
+  let srcDirs = glob.sync(`${rootSrc}/*/`);
+  if (dirs.length === 0) {
+    const folderName = path.basename(srcDirs[0]);
+    fs.moveSync(
+      `${rootPath}/index.html`,
+      `${rootPath}/${folderName}/index.html`
+    );
+    dirs = glob.sync(`${rootPath}/*/`);
+  }
 
   // generate links to banners
   let links = dirs.map(dir => {
