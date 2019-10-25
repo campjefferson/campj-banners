@@ -154,7 +154,7 @@ async function generate(globPattern) {
         if (assetSettings && assetSettings.addCss) {
           sass = `${sass}.${assetId}{background:url(./img/${assetName}) no-repeat top left; display:block; width:${assetSettings.width}px; height:${assetSettings.height}px; background-size:100% 100%; }`;
           console.log(
-            `generated the css for ${path.dirname(dir)}/img/${assetName}`
+            `generated the css for ${path.basename(dir)}/img/${assetName}`
           );
         }
       });
