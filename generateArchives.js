@@ -15,6 +15,7 @@ async function bannerArchives(allZipFileName) {
   // create individual banner zip files
   for (let i = 0; i < banners.length; i++) {
     let dirName = banners[i];
+
     let zipFilename = dirName.substr(0, dirName.length - 1);
     let files = glob.sync(`${dirName}/*`);
     let zipFile = new yazl.ZipFile();
@@ -23,8 +24,7 @@ async function bannerArchives(allZipFileName) {
       const f = files[k];
       const aFile = f.split('/');
       const fileNameInZipFile = aFile[aFile.length - 1];
-      // const prefix = zipFilename.replace('/dist', '');
-      zipFile.addFile(f, `${zipFilename.split('/')[1]}/${fileNameInZipFile}`);
+      zipFile.addFile(f, fileNameInZipFile);
     }
 
     zipFile.outputStream
@@ -32,7 +32,9 @@ async function bannerArchives(allZipFileName) {
       .on('close', function() {
         completed++;
         console.log(
-          `created ${zipFilename}.zip (${completed} of ${banners.length})`
+          `created ${path.basename(zipFilename)}.zip (${completed} of ${
+            banners.length
+          })`
         );
         if (completed === banners.length) {
           allArchive(allZipFileName);

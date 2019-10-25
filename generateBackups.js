@@ -16,7 +16,7 @@ function decode(png) {
 }
 
 async function captureBanner(browser, bannerPath, delay) {
-  console.info('generating backup gif for', bannerPath, '...');
+  console.info('generating backup gif for', path.basename(bannerPath), '...');
   // get the banner file name
   let fileNamePart = bannerPath;
   fileNamePart = `${path.dirname(fileNamePart)}/${path.basename(fileNamePart)}`;

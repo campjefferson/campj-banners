@@ -110,14 +110,17 @@ async function generate(globPattern) {
 
     const projectAssets = getProjectAssets(bannerId);
     const spriteName = `sprite${spriteFileName.toLowerCase()}.png`;
-    let sass = `.sprite{background:url("./img/${spriteName}") no-repeat top left;`;
+    let sass = ``;
     let images = glob.sync(`${dir}/sprite/*.png`);
 
+    if (!fs.existsSync(`${dir}/sprite`)) {
+      fs.mkdirSync(`${dir}/sprite`);
+    }
     if (!fs.existsSync(`${dir}/img`)) {
       fs.mkdirSync(`${dir}/img`);
     }
-
     if (images.length > 0) {
+      sass = `.sprite{background:url("./img/${spriteName}") no-repeat top left;`;
       const [result] = await spriteSmithRunAsync({ src: images });
       const ref = [];
       const names = Object.keys(result.coordinates);
@@ -145,14 +148,23 @@ async function generate(globPattern) {
       console.log(`generated the spritesheet ${spriteName}`);
     }
 
-    images = glob.sync(`${dir}/img/*.*`);
+    images = glob
+      .sync(`${dir}/img/*.*`)
+      .filter(name => name.indexOf(`sprite-`) === -1);
+    console.log('single images:', images);
     if (images.length > 0) {
       images.forEach(imgFileName => {
         const assetName = path.basename(imgFileName);
         const assetId = assetName.substr(0, assetName.length - 4);
         const assetSettings = projectAssets[assetId];
         if (assetSettings && assetSettings.addCss) {
-          sass = `${sass}.${assetId}{background:url(./img/${assetName}) no-repeat top left; display:block; width:${assetSettings.width}px; height:${assetSettings.height}px; background-size:100% 100%; top:${assetSettings.y}px; left:${assetSettings.x}px; }`;
+          sass = `${sass}.${assetId}{background:url(./img/${assetName}) no-repeat top left; display:block; width:${Math.round(
+            assetSettings.width
+          )}px; height:${Math.round(
+            assetSettings.height
+          )}px; background-size:100% 100%; top:${Math.round(
+            assetSettings.y
+          )}px; left:${Math.round(assetSettings.x)}px; }`;
           console.log(
             `generated the css for ${path.basename(dir)}/img/${assetName}`
           );
