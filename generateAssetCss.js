@@ -147,13 +147,13 @@ async function generate(globPattern) {
 
     images = glob.sync(`${dir}/img/*.*`);
     if (images.length > 0) {
-      console.log('single images:::');
       images.forEach(imgFileName => {
         const assetName = path.basename(imgFileName);
         const assetId = assetName.substr(0, assetName.length - 4);
         const assetSettings = projectAssets[assetId];
         if (assetSettings && assetSettings.addCss) {
           sass = `${sass}.${assetId}{background:url(./img/${assetName}) no-repeat top left; display:block; width:${assetSettings.width}px; height:${assetSettings.height}px; background-size:100% 100%; }`;
+          console.log(`generated the css for ${dir}/img/${assetName}`);
         }
       });
     }
