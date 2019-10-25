@@ -19,7 +19,7 @@ const Promise = require('bluebird').Promise;
 
 const generateFrontMatter = require('./generateFrontMatter');
 const generateIndex = require('./generateIndex');
-const generateSprites = require('./generateSprites');
+const generateAssetCss = require('./generateAssetCss');
 const reorganizeProductionFiles = require('./reorganizeProductionFiles');
 const generateBackups = require('./generateBackups');
 const generateArchives = require('./generateArchives');
@@ -37,7 +37,7 @@ const buildOutput = `${wd}/dist`;
 
   await getAsync(`rm -r ${cacheDir} || true && rm -r ${distDir} || true`);
   await generateFrontMatter();
-  await generateSprites();
+  await generateAssetCss();
   await getAsync(
     `parcel build ${buildSrc} --out-dir ${buildOutput} --public-url ./ --no-source-maps`
   );

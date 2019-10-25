@@ -12,7 +12,7 @@ const Promise = require('bluebird').Promise;
 
 const generateFrontMatter = require('./generateFrontMatter');
 const generateIndex = require('./generateIndex');
-const generateSprites = require('./generateSprites');
+const generateAssetCss = require('./generateAssetCss');
 
 const getAsync = Promise.promisify(cmd.get, { multiArgs: true, context: cmd });
 process.chdir(__dirname);
@@ -51,10 +51,10 @@ async function run() {
   runWatcher(bundler);
 }
 
-async function regenerateSpritesheet(filepath) {
+async function regenerateAssetCss(filepath) {
   const spriteFolderPath = path.dirname(filepath);
   const bannerFolderPath = path.dirname(spriteFolderPath);
-  generateSprites(`${bannerFolderPath}/`);
+  generateAssetCss(`${bannerFolderPath}/`);
   clearTimeout(regenTimeout[bannerFolderPath]);
   regenTimeout[filepath] = null;
 }
@@ -67,24 +67,33 @@ function regen(msg, filepath) {
     clearTimeout(regenTimeout[bannerFolderPath]);
   }
   regenTimeout[bannerFolderPath] = setTimeout(() => {
-    regenerateSpritesheet(filepath);
+    regenerateAssetCss(filepath);
   }, 300);
 }
 
 function runWatcher(bundler) {
   const watcher = watch([`${wd}/src/*/img/*.{png,gif,jpg,svg}`]);
-  watcher.on('add', () => {
-    console.warn('image added');
+  watcher.on('add', file => {
+    if (file.indexOf('sprite-') === -1) {
+      regen('image added', file);
+      return;
+    }
     reloadBrowsers(bundler);
   });
 
-  watcher.on('change', () => {
-    console.warn('image changed');
+  watcher.on('change', file => {
+    if (file.indexOf('sprite-') === -1) {
+      regen('image changed', file);
+      return;
+    }
     reloadBrowsers(bundler);
   });
 
-  watcher.on('unlink', () => {
-    console.warn('image removed');
+  watcher.on('unlink', file => {
+    if (file.indexOf('sprite-') === -1) {
+      regen('image removed', file);
+      return;
+    }
     reloadBrowsers(bundler);
   });
 
@@ -120,7 +129,7 @@ function reloadBrowsers(bundler) {
 
   await getAsync(`rm -r ${cacheDir} || true && rm -r ${distDir} || true`);
   await generateFrontMatter();
-  await generateSprites();
+  await generateAssetCss();
 
   run();
 })();

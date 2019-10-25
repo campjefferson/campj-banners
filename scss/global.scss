@@ -2,18 +2,63 @@
   position: absolute;
 }
 
-#ad {
-  box-shadow: inset 0px 0px 0px 1px black;
+figure {
+  margin: 0;
+  padding: 0;
+}
+.visible,
+.sprite.visible {
+  visibility: visible;
 }
 
-#ad, #banner, #clickarea{
-  position:relative;
-  display:block;
-  margin:0;
-  padding:0;
+.hidden,
+.sprite.hidden {
+  visibility: hidden;
+}
+
+.frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+#banner-frame {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(100% - 2px);
+  height: calc(100% - 2px);
+  display: block;
+  pointer-events: none;
+  border: 1px solid black;
+  // box-shadow: inset 0px 0px 0px 1px black;
+}
+
+#ad,
+#banner,
+#clickarea {
+  position: relative;
+  display: block;
+  margin: 0;
+  padding: 0;
+}
+
+#banner,
+#clickarea {
+  width: 100%;
+  height: 100%;
 }
 
 @mixin position($left, $top) {
   top: $top + 0px;
   left: $left + 0px;
+}
+
+@mixin size($width: 0, $height: 0) {
+  width: $width + 0px;
+  height: $height + 0px;
 }

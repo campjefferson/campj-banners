@@ -1,0 +1,49 @@
+@mixin porsche-border($width, $height, $thickness) {
+  border: $thickness + 0px solid white;
+  box-sizing: border-box;
+  @include size($width - 2, $height - 2);
+  @include position(1, 1);
+}
+
+@mixin porsche-footer($orientation: '300x250') {
+  position: absolute;
+  left: 0;
+  display: block;
+  background-color: white;
+
+  @if $orientation == '300x250' {
+    bottom: 0;
+    @include size(300, 62);
+  } @else if $orientation == '300x600' {
+    bottom: 0;
+    @include size(300, 107);
+  } @else if $orientation == '728x90' {
+    right: 0;
+    @include size(110, 90);
+  } @else if $orientation == '970x250' {
+    right: 0;
+    @include size(150, 250);
+  } @else if $orientation == '300x50' {
+    right: 0;
+    @include size(82, 50);
+  } @else if $orientation == '320x50' {
+    right: 0;
+    @include size(94, 50);
+  }
+}
+
+@mixin porsche-chevron {
+  .chevron {
+    transition: transform 0.2s ease-in;
+    transform: translate3d(0, 0, 0);
+  }
+
+  #clickarea {
+    &:hover {
+      .chevron {
+        transition: transform 0.2s ease-out;
+        transform: translate3d(2px, 0, 0);
+      }
+    }
+  }
+}

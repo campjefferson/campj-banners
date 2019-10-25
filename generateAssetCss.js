@@ -60,7 +60,7 @@ function getNameAndResolution(n, list) {
   return [name, res, assetName];
 }
 
-function outputSass(item, spriteWidth, spriteHeight) {
+function outputSassForSprite(item, spriteWidth, spriteHeight) {
   // console.log(item.assetProps);
   const res = item.assetProps ? item.assetProps.exportScale : item.resolution;
   const w = Math.ceil(item.width / res);
@@ -90,7 +90,7 @@ async function generate(globPattern) {
   if (!globPattern) {
     globPattern = `${process.env.PROJECT_DIR}/src/*/`;
   }
-  console.log(`generating sprites...`);
+  console.log(`generating css for assets...`);
   const dirs = glob.sync(globPattern, { absolute: false });
   if (!Array.isArray(dirs)) {
     dirs = [dirs];
@@ -109,16 +109,13 @@ async function generate(globPattern) {
     const bannerId = spriteFileName.substr(1);
 
     const projectAssets = getProjectAssets(bannerId);
-
     const spriteName = `sprite${spriteFileName.toLowerCase()}.png`;
-    const images = glob.sync(`${dir}/sprite/*.png`);
+    let sass = `.sprite{background:url("./img/${spriteName}") no-repeat top left;`;
+    let images = glob.sync(`${dir}/sprite/*.png`);
+
     if (!fs.existsSync(`${dir}/img`)) {
       fs.mkdirSync(`${dir}/img`);
     }
-
-    // if (projectAssets) {
-    //   console.log(bannerId, projectAssets);
-    // }
 
     if (images.length > 0) {
       const [result] = await spriteSmithRunAsync({ src: images });
@@ -135,18 +132,35 @@ async function generate(globPattern) {
           ...props
         });
       });
-      const sass = `.sprite{background:url("./img/${spriteName}") no-repeat top left;${ref
+      sass = `${sass}${ref
         .map(item =>
-          outputSass(item, result.properties.width, result.properties.height)
+          outputSassForSprite(
+            item,
+            result.properties.width,
+            result.properties.height
+          )
         )
         .join('')}}`;
       fs.writeFileSync(path.resolve(`${dir}/img/${spriteName}`), result.image);
-      fs.writeFileSync(path.resolve(`${dir}/sprite.scss`), sass);
-
       console.log(`generated the spritesheet ${spriteName}`);
     }
+
+    images = glob.sync(`${dir}/img/*.*`);
+    if (images.length > 0) {
+      console.log('single images:::');
+      images.forEach(imgFileName => {
+        const assetName = path.basename(imgFileName);
+        const assetId = assetName.substr(0, assetName.length - 4);
+        const assetSettings = projectAssets[assetId];
+        if (assetSettings && assetSettings.addCss) {
+          sass = `${sass}.${assetId}{background:url(./img/${assetName}) no-repeat top left; display:block; width:${assetSettings.width}px; height:${assetSettings.height}px; background-size:100% 100%; }`;
+        }
+      });
+    }
+
+    fs.writeFileSync(path.resolve(`${dir}/xd.scss`), sass);
   }
-  console.log(`sprites generated!`);
+  console.log(`css for assets generated!`);
 }
 
 module.exports = generate;
