@@ -3,6 +3,8 @@ const fs = require('fs-extra');
 const path = require('path');
 const pkg = require(process.env.PROJECT_DIR + '/package.json');
 const config = pkg.config;
+const findBannerWidthAndHeight = require('./dev/utils')
+  .findBannerWidthAndHeight;
 
 function createBannerList({ title, links }, addCurrent = false) {
   return `<div class="list">${title ? `<h4>${title}</h4>` : ``}<ul>${links
@@ -49,7 +51,7 @@ module.exports = (archiveName = null) => {
     let label = arr[arr.length - 2];
     let buttonLabel = label.replace(/_/g, ' ');
     const whString = label.split('_')[0];
-    const [width, height] = whString.split('x').map(numStr => parseInt(numStr));
+    const [width, height] = findBannerWidthAndHeight(dir);
     const url = `${label}`;
     return { label, buttonLabel, url, width, height };
   });
