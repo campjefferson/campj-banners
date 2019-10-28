@@ -124,8 +124,12 @@ async function generate(globPattern) {
       if (projectAssets) {
         images = images.filter(file => {
           const filename = path.basename(file).split('.')[0];
-          return projectAssets[filename] !== undefined;
+          return (
+            projectAssets[filename] !== undefined &&
+            projectAssets[filename].isSingle !== true
+          );
         });
+        // console.log('filtered assets', images);
       }
       const [result] = await spriteSmithRunAsync({ src: images });
       const ref = [];
