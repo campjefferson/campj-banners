@@ -121,6 +121,12 @@ async function generate(globPattern) {
     }
     if (images.length > 0) {
       sass = `.sprite{background:url("./img/${spriteName}") no-repeat top left;`;
+      if (projectAssets) {
+        images = images.filter(file => {
+          const filename = path.basename(file).split('.')[0];
+          return projectAssets[filename] !== undefined;
+        });
+      }
       const [result] = await spriteSmithRunAsync({ src: images });
       const ref = [];
       const names = Object.keys(result.coordinates);
@@ -151,7 +157,7 @@ async function generate(globPattern) {
     images = glob
       .sync(`${dir}/img/*.*`)
       .filter(name => name.indexOf(`sprite-`) === -1);
-    console.log('single images:', images);
+
     if (images.length > 0) {
       images.forEach(imgFileName => {
         const assetName = path.basename(imgFileName);
