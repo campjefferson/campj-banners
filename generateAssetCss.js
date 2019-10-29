@@ -123,7 +123,7 @@ async function generate(globPattern) {
       sass = `.sprite{background:url("./img/${spriteName}") no-repeat top left;`;
       if (projectAssets) {
         images = images.filter(file => {
-          const filename = path.basename(file).substr(0, file.length - 4);
+          const filename = file.replace(path.extname(file), '');
           return (
             projectAssets[filename] !== undefined &&
             projectAssets[filename].isSingle !== true
