@@ -3,7 +3,7 @@ const path = require('path');
 const glob = require('glob');
 const yazl = require('yazl');
 const pkg = require(process.env.PROJECT_DIR + '/package.json');
-
+const chalk = require('chalk');
 let completed = 0;
 
 async function bannerArchives(allZipFileName) {
@@ -32,6 +32,7 @@ async function bannerArchives(allZipFileName) {
       .on('close', function() {
         completed++;
         console.log(
+          chalk.green.bold(`success`),
           `created ${path.basename(zipFilename)}.zip (${completed} of ${
             banners.length
           })`
@@ -54,8 +55,10 @@ async function allArchive(allZipFileName) {
     let fileName = path.basename(files[i]);
     let gifPath = `${files[i].substr(0, files[i].length - 3)}gif`;
     let gifFileName = path.basename(gifPath);
-    zipFile.addFile(files[i], fileName);
-    zipFile.addFile(gifPath, gifFileName);
+    if (fs.existsSync(gifPath)) {
+      zipFile.addFile(files[i], fileName);
+      zipFile.addFile(gifPath, gifFileName);
+    }
   }
 
   zipFile.outputStream
@@ -65,7 +68,7 @@ async function allArchive(allZipFileName) {
       )
     )
     .on('close', function() {
-      console.log(`created ${allZipFileName}.zip`);
+      console.log(chalk.green.bold(`success`), `created ${allZipFileName}.zip`);
     });
 
   zipFile.end();

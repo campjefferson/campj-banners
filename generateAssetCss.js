@@ -4,6 +4,7 @@ const path = require('path');
 const Promise = require('bluebird').Promise;
 const Spritesmith = require('spritesmith');
 const camelCase = require('camelcase');
+const chalk = require('chalk');
 
 const spriteSmithRunAsync = Promise.promisify(Spritesmith.run, {
   multiArgs: true
@@ -90,7 +91,7 @@ async function generate(globPattern) {
   if (!globPattern) {
     globPattern = `${process.env.PROJECT_DIR}/src/*/`;
   }
-  console.log(`generating css for assets...`);
+  console.log(chalk.black.bold.bgGreen(` Generating CSS for assets... `));
   const dirs = glob.sync(globPattern, { absolute: false });
   if (!Array.isArray(dirs)) {
     dirs = [dirs];
@@ -155,7 +156,19 @@ async function generate(globPattern) {
         )
         .join('')}}`;
       fs.writeFileSync(path.resolve(`${dir}/img/${spriteName}`), result.image);
-      console.log(`generated the spritesheet ${spriteName}`);
+      console.warn(
+        chalk.green.bold(`success`),
+        `generated the spritesheet ${spriteName}`
+      );
+    } else {
+      fs.copyFileSync(
+        path.resolve(__dirname, `dev/placeholder.png`),
+        path.resolve(`${dir}/img/${spriteName}`)
+      );
+      console.log(
+        chalk.green.yellow(`info`),
+        `generated an empty sprite for ${spriteName}`
+      );
     }
 
     images = glob
@@ -176,6 +189,7 @@ async function generate(globPattern) {
             assetSettings.y
           )}px; left:${Math.round(assetSettings.x)}px; }`;
           console.log(
+            chalk.green.bold(`success`),
             `generated the css for ${path.basename(dir)}/img/${assetName}`
           );
         }
@@ -184,7 +198,7 @@ async function generate(globPattern) {
 
     fs.writeFileSync(path.resolve(`${dir}/xd.scss`), sass);
   }
-  console.log(`css for assets generated!`);
+  console.log(chalk.black.bold.bgGreen(` CSS for assets generated! `));
 }
 
 module.exports = generate;

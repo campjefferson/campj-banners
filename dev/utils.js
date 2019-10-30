@@ -29,7 +29,7 @@ function getBannerAttributes(fileName) {
   const name = dir.split('/').pop();
   const [width, height] = findBannerWidthAndHeight(fileName);
   const lang = findBannerLang(fileName);
-  return { name, dir, width, height, lang };
+  return { name, width, height, lang };
 }
 
 module.exports = { getBannerAttributes, findBannerWidthAndHeight };

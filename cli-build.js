@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 process.env.NODE_ENV = 'production';
 process.env.PARCEL_AUTOINSTALL = 'false';
+const chalk = require('chalk');
 const path = require('path');
 const fs = require('fs');
 const pkg = require(process.cwd() + '/package.json');
@@ -36,28 +37,35 @@ const buildOutput = `${wd}/dist`;
   const distDir = `${rootDir}/dist`;
 
   await getAsync(`rm -r ${cacheDir} || true && rm -r ${distDir} || true`);
+  await getAsync(`node setup`);
   await generateFrontMatter();
   await generateAssetCss();
   await getAsync(
     `parcel build ${buildSrc} --out-dir ${buildOutput} --public-url ./ --no-source-maps`
   );
 
-  console.log('reorganizing production files...');
+  console.log(chalk.black.bold.bgGreen(' Reorganizing production files... '));
   await reorganizeProductionFiles();
-  console.log('reorganizing production files complete!');
+  console.log(
+    chalk.black.bold.bgGreen(' Reorganizing production files complete! ')
+  );
 
-  console.log('generating backups...');
+  console.log(chalk.black.bold.bgGreen(' Generating backups... '));
   await generateBackups(pkg.config ? pkg.config.backupTimeout : null);
-  console.log('generating backups complete!');
+  console.log(chalk.black.bold.bgGreen(' Generating backups complete! '));
 
-  console.log('generating zip archives...');
+  console.log(chalk.black.bold.bgGreen(' Generating zip archives... '));
   const allArchiveName = await generateArchives();
-  console.log('generating zip archives complete!');
+  console.log(chalk.black.bold.bgGreen(' Generating zip archives complete! '));
 
-  console.log('generating production index file...');
+  console.log(
+    chalk.black.bold.bgGreen(' Generating production index file... ')
+  );
   generateIndex(allArchiveName);
-  console.log('generating production index file complete!');
-  console.log('all banners built successfully.');
+  console.log(
+    chalk.black.bold.bgGreen(' Generating production index file complete!')
+  );
+  console.log(chalk.black.bold.bgGreen(' All banners built successfully! '));
 
   const terserPath = path.resolve(wd, '.terserrc');
   await getAsync(`rm -r ${terserPath} || true`);

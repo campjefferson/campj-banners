@@ -1,6 +1,7 @@
 const fs = require('fs-extra');
 const path = require('path');
 const glob = require('glob');
+const chalk = require('chalk');
 const GIFEncoder = require('gifencoder');
 const PNG = require('png-js');
 const puppeteer = require('puppeteer');
@@ -16,7 +17,12 @@ function decode(png) {
 }
 
 async function captureBanner(browser, bannerPath, delay) {
-  console.info('generating backup gif for', path.basename(bannerPath), '...');
+  console.log(
+    chalk.yellow.bold(`info`),
+    'generating backup gif for',
+    path.basename(bannerPath),
+    '...'
+  );
   // get the banner file name
   let fileNamePart = bannerPath;
   fileNamePart = `${path.dirname(fileNamePart)}/${path.basename(fileNamePart)}`;
@@ -28,11 +34,22 @@ async function captureBanner(browser, bannerPath, delay) {
   const page = await browser.newPage();
   await page.goto(pageUrl);
   const [width, height] = await page.evaluate(() => {
-    return [
-      document.getElementById('ad').clientWidth,
-      document.getElementById('ad').clientHeight
-    ];
+    let el = document.getElementById('ad');
+    if (el) {
+      return [el.clientWidth, el.clientHeight];
+    }
+    return [false, false];
   });
+  if (!width || !height) {
+    await page.close();
+    console.log(
+      chalk.red.bold(`warning`),
+      'no backup gif was generated for',
+      bannerPath,
+      '.'
+    );
+    return Promise.resolve();
+  }
   await timeout(delay);
 
   const pngBuffer = await page.screenshot({
@@ -53,7 +70,12 @@ async function captureBanner(browser, bannerPath, delay) {
   encoder.finish();
 
   await page.close();
-  console.info('backup gif for', bannerPath, 'was generated.');
+  console.log(
+    chalk.green.bold(`success`),
+    'backup gif for',
+    bannerPath,
+    'was generated.'
+  );
   return Promise.resolve();
 }
 

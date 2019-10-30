@@ -1,12 +1,13 @@
 const glob = require('glob');
 const fs = require('fs');
 const matter = require('gray-matter');
+const chalk = require('chalk');
 const { getBannerAttributes } = require('./dev/utils');
 
 const YAMLFrontMatter = /^---(.|\n)*?---/;
 
 module.exports = () => {
-  console.log('generating frontMatter...');
+  console.log(chalk.black.bold.bgGreen(' Generating frontMatter... '));
   const entryFiles = glob.sync(`${process.env.PROJECT_DIR}/src/**/*.hbs`);
 
   for (let i = 0; i < entryFiles.length; i++) {
@@ -16,6 +17,7 @@ module.exports = () => {
     let fm = matter(file);
 
     if (fm.data) {
+      // console.log('existing fm:', fm.data, 'new data', data);
       data = Object.assign(fm.data, data);
     }
 
@@ -30,5 +32,5 @@ module.exports = () => {
       fs.writeFileSync(filePath, `${newFrontMatter}\n${file}`);
     }
   }
-  console.log('done generating frontMatter!');
+  console.log(chalk.black.bold.bgGreen(' Done generating frontMatter! '));
 };

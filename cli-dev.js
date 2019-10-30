@@ -3,7 +3,7 @@ process.env.NODE_ENV = 'development';
 process.env.PARCEL_AUTOINSTALL = 'false';
 const wd = process.cwd().toString();
 process.env.PROJECT_DIR = wd;
-
+const chalk = require('chalk');
 const path = require('path');
 const watch = require('glob-watcher');
 const Bundler = require('parcel-bundler');
@@ -13,13 +13,14 @@ const Promise = require('bluebird').Promise;
 const generateFrontMatter = require('./generateFrontMatter');
 const generateIndex = require('./generateIndex');
 const generateAssetCss = require('./generateAssetCss');
+const setup = require('./setup');
 
 const getAsync = Promise.promisify(cmd.get, { multiArgs: true, context: cmd });
 process.chdir(__dirname);
 
 const bundles = [
   `${wd}/src/**/index.hbs`,
-  `!${wd}/src/**/sprite-*.png`,
+  `${wd}/src/**/sprite-*.png`,
   `!${wd}/src/**/sprite/*`
 ];
 
@@ -34,19 +35,18 @@ let regenTimeout = {};
 let reloadTimeout;
 
 bundler.on('bundled', async bundle => {
-  console.log('bundle complete.');
+  console.log(chalk.yellow.bold('info'), 'bundle complete.');
   try {
-    console.log('generating dev index file...');
+    console.log(chalk.yellow.bold('info'), 'generating dev index file...');
     generateIndex();
-    console.log('index file generated!');
+    console.log(chalk.green.bold('success'), 'index file generated!');
   } catch (e) {
-    console.log('error generating dev index file');
+    console.log(chalk.red.bold('error'), 'error generating dev index file');
     console.log(e);
   }
 });
 
 async function run() {
-  console.log('run', process.env.NODE_ENV);
   await bundler.serve(3000);
   runWatcher(bundler);
 }
@@ -60,7 +60,7 @@ async function regenerateAssetCss(filepath) {
 }
 
 function regen(msg, filepath) {
-  console.warn(msg, filepath);
+  console.warn(chalk.yellow.bold('info'), msg, filepath);
   const spriteFolderPath = path.dirname(filepath);
   const bannerFolderPath = path.dirname(spriteFolderPath);
   if (regenTimeout[bannerFolderPath]) {
@@ -117,7 +117,7 @@ function reloadBrowsers(bundler) {
         type: 'reload'
       });
     } catch (e) {
-      console.log(e);
+      console.log(chalk.red.bold('error reloading'), e);
     }
   }, 500);
 }
@@ -128,6 +128,7 @@ function reloadBrowsers(bundler) {
   const distDir = `${rootDir}/dist`;
 
   await getAsync(`rm -r ${cacheDir} || true && rm -r ${distDir} || true`);
+  await setup();
   await generateFrontMatter();
   await generateAssetCss();
 

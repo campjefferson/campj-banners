@@ -10,14 +10,14 @@ module.exports = async () => {
     let file = fs.readFileSync(files[i], `utf-8`);
     let dir = path.dirname(files[i]);
     let cssUrlMatches = file.match(/url\(.*?\)/gi);
-
-    for (let j = 0; j < cssUrlMatches.length; j++) {
-      let match = cssUrlMatches[j];
-      let imageFileName = match.substr(4, match.length - 5);
-      let fileName = `${rootDir}/${imageFileName}`;
-      let newFileName = `${dir}/${imageFileName}`;
-
-      fs.moveSync(fileName, newFileName);
+    if (cssUrlMatches) {
+      for (let j = 0; j < cssUrlMatches.length; j++) {
+        let match = cssUrlMatches[j];
+        let imageFileName = match.substr(4, match.length - 5);
+        let fileName = `${rootDir}/${imageFileName}`;
+        let newFileName = `${dir}/${imageFileName}`;
+        fs.moveSync(fileName, newFileName);
+      }
     }
   }
 
