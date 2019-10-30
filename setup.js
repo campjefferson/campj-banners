@@ -3,6 +3,20 @@ const path = require('path');
 const chalk = require('chalk');
 const glob = require('glob');
 
+function getNetlifyTomlDefaults() {
+  return `[build]
+publish = "dist"
+command = "yarn build"
+environment = { NODE_VERSION = "10.13.0", YARN_VERSION = "1.17.3", RUBY_VERSION = "2.6.2", DATO_API_TOKEN = "867984b424d191b440f0dd6c4e494d"}
+`;
+}
+
+function getGitIgnoreDefaults() {
+  return `node_modules
+.cache
+dist`;
+}
+
 function getHbsDefaults() {
   return `
 {{#> banner }}
@@ -40,8 +54,32 @@ function getScssDefaults() {
 
 module.exports = async () => {
   console.log(
-    chalk.black.bold.bgGreen(' Ensuring folders are set up properly... ')
+    chalk.black.bold.bgGreen(
+      ' Ensuring project files & folders are set up properly... '
+    )
   );
+
+  const netlifyTomlPath = path.resolve(
+    `${process.env.PROJECT_DIR}/netlify.toml`
+  );
+  const gitignorePath = path.resolve(`${process.env.PROJECT_DIR}/.gitignore`);
+
+  if (!fs.existsSync(netlifyTomlPath)) {
+    fs.writeFileSync(netlifyTomlPath, getNetlifyTomlDefaults(), `utf-8`);
+    console.log(
+      chalk.yellow.bold('info'),
+      `created the file ${path.basename(netlifyTomlPath)}`
+    );
+  }
+
+  if (!fs.existsSync(gitignorePath)) {
+    fs.writeFileSync(gitignorePath, getGitIgnoreDefaults(), `utf-8`);
+    console.log(
+      chalk.yellow.bold('info'),
+      `created the file ${path.basename(gitignorePath)}`
+    );
+  }
+
   const entryFolders = glob.sync(`${process.env.PROJECT_DIR}/src/*/`);
   entryFolders.forEach(dir => {
     const baseDirName = path.basename(dir);
