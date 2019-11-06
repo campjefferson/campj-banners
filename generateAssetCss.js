@@ -179,7 +179,7 @@ async function generate(globPattern) {
       images.forEach(imgFileName => {
         const assetName = path.basename(imgFileName);
         const assetId = assetName.substr(0, assetName.length - 4);
-        const assetSettings = projectAssets[assetId];
+        const assetSettings = projectAssets && projectAssets[assetId];
         if (assetSettings && assetSettings.addCss) {
           sass = `${sass}.${assetId}{background:url(./img/${assetName}) no-repeat top left; display:block; width:${Math.round(
             assetSettings.width

@@ -3,16 +3,22 @@ const path = require('path');
 const glob = require('glob');
 const chalk = require('chalk');
 const GIFEncoder = require('gifencoder');
-const PNG = require('png-js');
+const getPixels = require('get-pixels');
 const puppeteer = require('puppeteer');
 
 function timeout(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// function decode(png) {
+//   return new Promise(r => {
+//     png.decode(pixels => r(pixels));
+//   });
+// }
+
 function decode(png) {
   return new Promise(r => {
-    png.decode(pixels => r(pixels));
+    getPixels(png, `image/png`, (err, pixels) => r(pixels.data));
   });
 }
 
@@ -59,14 +65,12 @@ async function captureBanner(browser, bannerPath, delay) {
 
   // encode gif
   const encoder = new GIFEncoder(width, height);
-  const png = new PNG(pngBuffer);
-
   encoder.start();
   encoder.setRepeat(0);
-  encoder.setQuality(10); // default
+  encoder.setQuality(1);
   encoder.createWriteStream().pipe(fs.createWriteStream(fileName));
 
-  await decode(png).then(pixels => encoder.addFrame(pixels));
+  await decode(pngBuffer).then(pixels => encoder.addFrame(pixels));
   encoder.finish();
 
   await page.close();

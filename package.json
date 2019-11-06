@@ -1,6 +1,6 @@
 {
   "name": "@campj/banners",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "Camp Jefferson utilities for banner production",
   "main": "index.js",
   "scripts": {
@@ -29,6 +29,7 @@
     "camelcase": "^5.3.1",
     "chalk": "^2.4.2",
     "fs-extra": "^8.1.0",
+    "get-pixels": "^3.3.2",
     "gifencoder": "^2.0.1",
     "glob": "^7.1.4",
     "glob-watcher": "^5.0.3",
@@ -38,7 +39,6 @@
     "parcel-plugin-handlebars": "^0.4.4",
     "parcel-plugin-imagemin": "^3.0.0",
     "parcel-plugin-inliner": "^1.0.10",
-    "png-js": "^0.1.1",
     "puppeteer": "^1.20.0",
     "sass": "^1.23.1",
     "spritesmith": "^3.4.0",
