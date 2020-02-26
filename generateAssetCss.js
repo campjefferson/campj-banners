@@ -1,10 +1,10 @@
-const glob = require('glob');
-const fs = require('fs-extra');
-const path = require('path');
-const Promise = require('bluebird').Promise;
-const Spritesmith = require('spritesmith');
-const camelCase = require('camelcase');
-const chalk = require('chalk');
+const glob = require("glob");
+const fs = require("fs-extra");
+const path = require("path");
+const Promise = require("bluebird").Promise;
+const Spritesmith = require("spritesmith");
+const camelCase = require("camelcase");
+const chalk = require("chalk");
 
 const spriteSmithRunAsync = Promise.promisify(Spritesmith.run, {
   multiArgs: true
@@ -35,7 +35,7 @@ function getProjectAssets(bannerId) {
       return;
     }
     assets.forEach(asset => {
-      result[asset.name] = asset;
+      result[asset.exportName] = asset;
     });
   });
   return result;
@@ -43,18 +43,18 @@ function getProjectAssets(bannerId) {
 
 function getNameAndResolution(n, list) {
   let fileName = path.basename(n);
-  let baseFilename = fileName.replace(path.extname(fileName), '');
+  let baseFilename = fileName.replace(path.extname(fileName), "");
   let res = 1;
   if (baseFilename.lastIndexOf(`@`) >= 0) {
     let resNameArr = baseFilename.split(`@`);
     res = resNameArr.pop();
-    res = res.replace('x', '');
+    res = res.replace("x", "");
     res = parseFloat(res);
-    baseFilename = resNameArr.join('');
+    baseFilename = resNameArr.join("");
   }
   let assetName = baseFilename.trim();
   let name = camelCase(baseFilename);
-  const existing = list.filter(item => item.name === name);
+  const existing = list.filter(item => item.exportName === name);
   if (existing.length > 0) {
     name = `${name}-${existing.length}`;
   }
@@ -102,11 +102,11 @@ async function generate(globPattern) {
       dir = dir.substr(0, dir.length - 1);
     }
     let spriteFileName = dirs[i]
-      .substr(dirs[i].indexOf('src'))
-      .replace(/\//g, '-');
+      .substr(dirs[i].indexOf("src"))
+      .replace(/\//g, "-");
     spriteFileName = spriteFileName.substr(0, spriteFileName.length - 1);
-    spriteFileName = spriteFileName.replace(/(\.-src)/g, '');
-    spriteFileName = spriteFileName.replace(/src/g, '');
+    spriteFileName = spriteFileName.replace(/(\.-src)/g, "");
+    spriteFileName = spriteFileName.replace(/src/g, "");
     const bannerId = spriteFileName.substr(1);
 
     const projectAssets = getProjectAssets(bannerId);
@@ -124,7 +124,7 @@ async function generate(globPattern) {
       sass = `.sprite{background:url("./img/${spriteName}") no-repeat top left;`;
       if (projectAssets) {
         images = images.filter(file => {
-          const filename = path.basename(file).replace(path.extname(file), '');
+          const filename = path.basename(file).replace(path.extname(file), "");
           return (
             projectAssets[filename] !== undefined &&
             projectAssets[filename].isSingle !== true
@@ -132,13 +132,12 @@ async function generate(globPattern) {
         });
         // console.log('filtered assets', images);
       }
-      const [result] = await spriteSmithRunAsync({ src: images });
+      const [result] = await spriteSmithRunAsync({ src: images, padding: 2 });
       const ref = [];
       const names = Object.keys(result.coordinates);
       names.forEach(n => {
         let props = result.coordinates[n];
         let [name, resolution, assetName] = getNameAndResolution(n, ref);
-
         ref.push({
           name,
           resolution,
@@ -154,7 +153,7 @@ async function generate(globPattern) {
             result.properties.height
           )
         )
-        .join('')}}`;
+        .join("")}}`;
       fs.writeFileSync(path.resolve(`${dir}/img/${spriteName}`), result.image);
       console.warn(
         chalk.green.bold(`success`),

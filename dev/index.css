@@ -1,10 +1,15 @@
-@import url('https://fonts.googleapis.com/css?family=Work+Sans:400,700&display=swap');
+@import url("https://fonts.googleapis.com/css?family=Work+Sans:400,700&display=swap");
 
 body {
-  font-family: 'Work Sans', sans-serif;
+  font-family: "Work Sans", sans-serif;
   font-size: 18px;
   padding: 0;
   margin: 0;
+  scroll-behavior: smooth;
+}
+
+* {
+  box-sizing: border-box;
 }
 
 main {
@@ -22,15 +27,19 @@ main {
   padding-right: 30px;
   margin-right: 40px;
   border-right: 1px solid grey;
+  min-height: 300px;
+  max-height: calc(100vh - 300px);
+  -webkit-overflow-scrolling: touch;
+  overflow: auto;
 }
 
 .list:not(:last-child) {
-  margin-bottom: 30px;
+  margin-bottom: 25px;
 }
 
 ul {
   list-style: none;
-  padding: 0;
+  padding: 5px;
   margin: 0;
 }
 

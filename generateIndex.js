@@ -1,9 +1,9 @@
-const glob = require('glob');
-const fs = require('fs-extra');
-const path = require('path');
-const pkg = require(process.env.PROJECT_DIR + '/package.json');
+const glob = require("glob");
+const fs = require("fs-extra");
+const path = require("path");
+const pkg = require(process.env.PROJECT_DIR + "/package.json");
 const config = pkg.config;
-const findBannerWidthAndHeight = require('./dev/utils')
+const findBannerWidthAndHeight = require("./dev/utils")
   .findBannerWidthAndHeight;
 
 function createBannerList({ title, links }, addCurrent = false) {
@@ -11,11 +11,11 @@ function createBannerList({ title, links }, addCurrent = false) {
     .map(
       ({ label, filteredButtonLabel, buttonLabel, url, width, height }, idx) =>
         `<li><button${
-          idx === 0 && addCurrent ? ' class="current"' : ''
+          idx === 0 && addCurrent ? ' class="current"' : ""
         } data-width="${width}" data-height="${height}" data-label="${buttonLabel}" data-url="${url}" >${filteredButtonLabel ||
           buttonLabel}</button></li>`
     )
-    .join('')}</ul></div>`;
+    .join("")}</ul></div>`;
 }
 
 function renderDownloads(archiveName) {
@@ -25,11 +25,24 @@ function renderDownloads(archiveName) {
   return `<div></div>`;
 }
 
+function getFilteredLabel(label, filters) {
+  label = label.toLowerCase();
+
+  filters.forEach(filter => {
+    if (filter.indexOf("!") === 0) {
+      filter = filter.substr(1);
+    }
+    label = label.replace(filter, "");
+  });
+
+  return label.trim();
+}
+
 module.exports = (archiveName = null) => {
   const now = new Date();
   // load css and js file as text
-  const css = fs.readFileSync(path.join(__dirname, './dev/index.css'));
-  const js = fs.readFileSync(path.join(__dirname, './dev/index.js'));
+  const css = fs.readFileSync(path.join(__dirname, "./dev/index.css"));
+  const js = fs.readFileSync(path.join(__dirname, "./dev/index.js"));
 
   // get published banner directories
   const rootPath = path.resolve(process.env.PROJECT_DIR, `./dist`);
@@ -47,10 +60,9 @@ module.exports = (archiveName = null) => {
 
   // generate links to banners
   let links = dirs.map(dir => {
-    const arr = dir.split('/');
+    const arr = dir.split("/");
     let label = arr[arr.length - 2];
-    let buttonLabel = label.replace(/_/g, ' ');
-    const whString = label.split('_')[0];
+    let buttonLabel = label.replace(/_/g, " ");
     const [width, height] = findBannerWidthAndHeight(dir);
     const url = `${label}`;
     return { label, buttonLabel, url, width, height };
@@ -58,20 +70,51 @@ module.exports = (archiveName = null) => {
 
   let groups = [];
   if (config.lists) {
-    config.lists.forEach(listFilter =>
+    config.lists.forEach(listFilter => {
+      let title = listFilter;
+      let filter = listFilter;
+      let filters;
+
+      if (typeof listFilter === `object`) {
+        title = listFilter.title;
+        if (listFilter.filter) {
+          if (Array.isArray(listFilter.filter)) {
+            filters = listFilter.filter;
+          } else {
+            filter = listFilter.filter;
+          }
+        } else {
+          filter = title;
+        }
+      }
+      if (!filters) {
+        filters = [filter];
+      }
       groups.push({
-        title: listFilter,
+        title,
         links: links
-          .filter(l => l.buttonLabel.toLowerCase().indexOf(listFilter) >= 0)
+          .filter(l => {
+            let passes = true;
+            for (let i = 0; i < filters.length; i++) {
+              let filterToUse = filters[i];
+              let isNotFilter = filterToUse.indexOf("!") === 0;
+              if (isNotFilter) {
+                filterToUse = filterToUse.substr(1);
+              }
+              let result = l.buttonLabel.toLowerCase().indexOf(filterToUse);
+              passes = isNotFilter ? result === -1 : result >= 0;
+              if (!passes) {
+                return false;
+              }
+            }
+            return true;
+          })
           .map(l => ({
             ...l,
-            filteredButtonLabel: l.buttonLabel
-              .toLowerCase()
-              .replace(listFilter, '')
-              .trim()
+            filteredButtonLabel: getFilteredLabel(l.buttonLabel, filters)
           }))
-      })
-    );
+      });
+    });
   } else {
     groups = [{ title: null, links }];
   }
@@ -88,7 +131,7 @@ module.exports = (archiveName = null) => {
   }</h1><h2 id="banner-title">${
     links[0].buttonLabel
   }</h2></header><main><div id="list-container">${bannerLists.join(
-    ''
+    ""
   )}</div><iframe id="banner-frame" src="/${
     links[0].url
   }/index.html" style="width:${links[0].width}px;height:${

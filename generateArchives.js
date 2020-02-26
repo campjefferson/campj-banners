@@ -1,12 +1,12 @@
-const fs = require('fs');
-const path = require('path');
-const glob = require('glob');
-const yazl = require('yazl');
-const pkg = require(process.env.PROJECT_DIR + '/package.json');
-const chalk = require('chalk');
+const fs = require("fs");
+const path = require("path");
+const glob = require("glob");
+const yazl = require("yazl");
+const pkg = require(process.env.PROJECT_DIR + "/package.json");
+const chalk = require("chalk");
 let completed = 0;
 
-async function bannerArchives(allZipFileName) {
+async function bannerArchives(allZipFilename) {
   // get banner folders
   const banners = glob.sync(`${process.env.PROJECT_DIR}/dist/*/`, {
     absolute: false
@@ -22,14 +22,14 @@ async function bannerArchives(allZipFileName) {
 
     for (let k = 0; k < files.length; k++) {
       const f = files[k];
-      const aFile = f.split('/');
-      const fileNameInZipFile = aFile[aFile.length - 1];
-      zipFile.addFile(f, fileNameInZipFile);
+      const aFile = f.split("/");
+      const filenameInZipFile = aFile[aFile.length - 1];
+      zipFile.addFile(f, filenameInZipFile);
     }
 
     zipFile.outputStream
       .pipe(fs.createWriteStream(`${zipFilename}.zip`))
-      .on('close', function() {
+      .on("close", function() {
         completed++;
         console.log(
           chalk.green.bold(`success`),
@@ -38,37 +38,37 @@ async function bannerArchives(allZipFileName) {
           })`
         );
         if (completed === banners.length) {
-          allArchive(allZipFileName);
+          allArchive(allZipFilename);
         }
       });
     zipFile.end();
   }
 }
 
-async function allArchive(allZipFileName) {
+async function allArchive(allZipFilename) {
   const files = glob.sync(
     path.resolve(process.env.PROJECT_DIR, `./dist/*.zip`)
   );
   let zipFile = new yazl.ZipFile();
 
   for (let i = 0; i < files.length; i++) {
-    let fileName = path.basename(files[i]);
-    let gifPath = `${files[i].substr(0, files[i].length - 3)}gif`;
-    let gifFileName = path.basename(gifPath);
-    if (fs.existsSync(gifPath)) {
-      zipFile.addFile(files[i], fileName);
-      zipFile.addFile(gifPath, gifFileName);
+    let filename = path.basename(files[i]);
+    let backupImagePath = `${files[i].substr(0, files[i].length - 3)}jpg`;
+    let backupImageFilename = path.basename(backupImagePath);
+    if (fs.existsSync(backupImagePath)) {
+      zipFile.addFile(files[i], filename);
+      zipFile.addFile(backupImagePath, backupImageFilename);
     }
   }
 
   zipFile.outputStream
     .pipe(
       fs.createWriteStream(
-        path.resolve(process.env.PROJECT_DIR, `./dist/${allZipFileName}.zip`)
+        path.resolve(process.env.PROJECT_DIR, `./dist/${allZipFilename}.zip`)
       )
     )
-    .on('close', function() {
-      console.log(chalk.green.bold(`success`), `created ${allZipFileName}.zip`);
+    .on("close", function() {
+      console.log(chalk.green.bold(`success`), `created ${allZipFilename}.zip`);
     });
 
   zipFile.end();
@@ -77,10 +77,10 @@ async function allArchive(allZipFileName) {
 module.exports = async () => {
   const now = new Date();
 
-  const allZipFileName = `${
+  const allZipFilename = `${
     pkg.name
   }-${now.getFullYear()}-${now.getMonth()}-${now.getDate()}`;
 
-  await bannerArchives(allZipFileName);
-  return allZipFileName;
+  await bannerArchives(allZipFilename);
+  return allZipFilename;
 };

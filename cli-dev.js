@@ -1,19 +1,19 @@
 #!/usr/bin/env node
-process.env.NODE_ENV = 'development';
-process.env.PARCEL_AUTOINSTALL = 'false';
+process.env.NODE_ENV = "development";
+process.env.PARCEL_AUTOINSTALL = "false";
 const wd = process.cwd().toString();
 process.env.PROJECT_DIR = wd;
-const chalk = require('chalk');
-const path = require('path');
-const watch = require('glob-watcher');
-const Bundler = require('parcel-bundler');
-const cmd = require('node-cmd');
-const Promise = require('bluebird').Promise;
+const chalk = require("chalk");
+const path = require("path");
+const watch = require("glob-watcher");
+const Bundler = require("parcel-bundler");
+const cmd = require("node-cmd");
+const Promise = require("bluebird").Promise;
 
-const generateFrontMatter = require('./generateFrontMatter');
-const generateIndex = require('./generateIndex');
-const generateAssetCss = require('./generateAssetCss');
-const setup = require('./setup');
+const generateFrontMatter = require("./generateFrontMatter");
+const generateIndex = require("./generateIndex");
+const generateAssetCss = require("./generateAssetCss");
+const setup = require("./setup");
 
 const getAsync = Promise.promisify(cmd.get, { multiArgs: true, context: cmd });
 process.chdir(__dirname);
@@ -34,14 +34,14 @@ const bundler = new Bundler(bundles, {
 let regenTimeout = {};
 let reloadTimeout;
 
-bundler.on('bundled', async bundle => {
-  console.log(chalk.yellow.bold('info'), 'bundle complete.');
+bundler.on("bundled", async bundle => {
+  console.log(chalk.yellow.bold("info"), "bundle complete.");
   try {
-    console.log(chalk.yellow.bold('info'), 'generating dev index file...');
+    console.log(chalk.yellow.bold("info"), "generating dev index file...");
     generateIndex();
-    console.log(chalk.green.bold('success'), 'index file generated!');
+    console.log(chalk.green.bold("success"), "index file generated!");
   } catch (e) {
-    console.log(chalk.red.bold('error'), 'error generating dev index file');
+    console.log(chalk.red.bold("error"), "error generating dev index file");
     console.log(e);
   }
 });
@@ -60,7 +60,7 @@ async function regenerateAssetCss(filepath) {
 }
 
 function regen(msg, filepath) {
-  console.warn(chalk.yellow.bold('info'), msg, filepath);
+  console.warn(chalk.yellow.bold("info"), msg, filepath);
   const spriteFolderPath = path.dirname(filepath);
   const bannerFolderPath = path.dirname(spriteFolderPath);
   if (regenTimeout[bannerFolderPath]) {
@@ -73,39 +73,39 @@ function regen(msg, filepath) {
 
 function runWatcher(bundler) {
   const watcher = watch([`${wd}/src/*/img/*.{png,gif,jpg,svg}`]);
-  watcher.on('add', file => {
-    if (file.indexOf('sprite-') === -1) {
-      regen('image added', file);
+  watcher.on("add", file => {
+    if (file.indexOf("sprite-") === -1) {
+      regen("image added", file);
       return;
     }
     reloadBrowsers(bundler);
   });
 
-  watcher.on('change', file => {
-    if (file.indexOf('sprite-') === -1) {
-      regen('image changed', file);
+  watcher.on("change", file => {
+    if (file.indexOf("sprite-") === -1) {
+      regen("image changed", file);
       return;
     }
     reloadBrowsers(bundler);
   });
 
-  watcher.on('unlink', file => {
-    if (file.indexOf('sprite-') === -1) {
-      regen('image removed', file);
+  watcher.on("unlink", file => {
+    if (file.indexOf("sprite-") === -1) {
+      regen("image removed", file);
       return;
     }
     reloadBrowsers(bundler);
   });
 
   const spriteWatcher = watch([`${wd}/src/*/sprite/*.{png,gif,jpg}`]);
-  spriteWatcher.on('add', filepath => {
-    regen('sprite image added', filepath);
+  spriteWatcher.on("add", filepath => {
+    regen("sprite image added", filepath);
   });
-  spriteWatcher.on('change', filepath => {
-    regen('sprite image changed', filepath);
+  spriteWatcher.on("change", filepath => {
+    regen("sprite image changed", filepath);
   });
-  spriteWatcher.on('unlink', filepath => {
-    regen('sprite image removed', filepath);
+  spriteWatcher.on("unlink", filepath => {
+    regen("sprite image removed", filepath);
   });
 }
 
@@ -114,10 +114,10 @@ function reloadBrowsers(bundler) {
   reloadTimeout = setTimeout(() => {
     try {
       bundler.hmr.broadcast({
-        type: 'reload'
+        type: "reload"
       });
     } catch (e) {
-      console.log(chalk.red.bold('error reloading'), e);
+      console.log(chalk.red.bold("error reloading"), e);
     }
   }, 500);
 }
