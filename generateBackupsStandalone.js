@@ -1,14 +1,49 @@
-const fs = require("fs-extra");
 const Promise = require("bluebird").Promise;
 const path = require("path");
 const glob = require("glob");
 const chalk = require("chalk");
 const cmd = require("node-cmd");
-const getPixels = require("get-pixels");
 const puppeteer = require("puppeteer");
+const baseDirName =
+  process.argv.indexOf("--dir") >= 0
+    ? process.argv[process.argv.indexOf("--dir") + 1]
+    : null;
 
-const getAsync = Promise.promisify(cmd.get, { multiArgs: true, context: cmd });
-const baseDir = process.argv[process.argv.indexOf("--dir") + 1];
+const baseDir = baseDirName
+  ? path.resolve(process.cwd(), baseDirName)
+  : process.cwd();
+
+const wrapperId =
+  process.argv.indexOf("--wrapper") >= 0
+    ? process.argv[process.argv.indexOf("--wrapper") + 1]
+    : `ad`;
+
+const quality =
+  process.argv.indexOf("--quality") >= 0
+    ? parseInt(process.argv[process.argv.indexOf("--quality") + 1])
+    : 70;
+
+const selectorsToHideString =
+  process.argv.indexOf("--hide") >= 0
+    ? process.argv[process.argv.indexOf("--hide") + 1]
+    : null;
+
+let fallbackPath =
+  process.argv.indexOf("--fallbackpath") >= 0
+    ? process.argv[process.argv.indexOf("--fallbackpath") + 1]
+    : "";
+if (
+  fallbackPath &&
+  fallbackPath.length > 1 &&
+  fallbackPath.charAt(fallbackPath.length - 1) !== "/"
+) {
+  fallbackPath = `${fallbackPath}/`;
+}
+
+let selectorsToHide = null;
+if (selectorsToHideString) {
+  selectorsToHide = selectorsToHideString.split(",");
+}
 
 function timeout(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -25,13 +60,12 @@ async function captureBanner(browser, bannerPath, delay) {
   let fileNamePart = bannerPath;
   fileNamePart = `${path.dirname(fileNamePart)}/${path.basename(fileNamePart)}`;
   // const fileName = fileNamePart + ".jpg";
-  const fileName = `${fileNamePart}/assets/images/fallback.jpg`;
+  const fileName = `${fileNamePart}/${fallbackPath}fallback.jpg`;
   const serverBannerPath = bannerPath.replace(baseDir, "");
   const pageUrl = `http://localhost:8080${serverBannerPath}index.html`;
   console.log(`capturing banner at ${pageUrl}`);
   // puppeteer magic
-  const page = await browser.newPage();
-
+  let page = await browser.newPage();
   await page.goto(pageUrl, { waitUntil: ["load", "networkidle0"] });
   await page.emulateMedia("screen");
   await page.setViewport({
@@ -39,19 +73,25 @@ async function captureBanner(browser, bannerPath, delay) {
     height: 768,
     deviceScaleFactor: 1
   });
-  const [width, height] = await page.evaluate(() => {
-    let el = document.getElementById("wrapper");
-    try {
-      document.querySelector("#replay-button").style.display = `none`;
-      document.querySelector("#replay-button").style.visibility = `hidden`;
-      document.querySelector("#replay-button").style.visibility = `hidden`;
-    } catch (e) {}
-
-    if (el) {
-      return [el.clientWidth, el.clientHeight];
-    }
-    return [false, false];
-  });
+  const [width, height] = await page.evaluate(
+    (wrapperId, selectorsToHide) => {
+      let el = document.getElementById(wrapperId);
+      try {
+        if (selectorsToHide) {
+          selectorsToHide.forEach(selector => {
+            document.querySelector(selector).style.display = `none`;
+            document.querySelector(selector).style.visibility = `hidden`;
+          });
+        }
+      } catch (e) {}
+      if (el) {
+        return [el.clientWidth, el.clientHeight];
+      }
+      return [false, false];
+    },
+    wrapperId,
+    selectorsToHide
+  );
   if (!width || !height) {
     await page.close();
     console.log(
@@ -66,7 +106,7 @@ async function captureBanner(browser, bannerPath, delay) {
   await page.screenshot({
     path: fileName,
     type: `jpeg`,
-    quality: 70,
+    quality: quality,
     clip: { x: 0, y: 0, width, height }
   });
 
@@ -83,7 +123,14 @@ async function captureBanner(browser, bannerPath, delay) {
 async function captureAllBanners(banners, delay = 15000) {
   const browser = await puppeteer.launch({
     headless: false,
-    args: ["--headless", "--hide-scrollbars", "--mute-audio"],
+    args: [
+      "--headless",
+      "--hide-scrollbars",
+      "--mute-audio",
+      "--disable-gpu",
+      "--no-sandbox",
+      "--enable-logging"
+    ],
     executablePath:
       "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
   });
@@ -99,6 +146,7 @@ async function generate(dir, delay = 20000) {
   console.log("opened server");
   let rootPath = path.resolve(dir);
   let banners = glob.sync(`${rootPath}/*/`);
+  await timeout(1000);
   await captureAllBanners(banners, delay);
   console.log("all backups created");
   cmd.run(`kill -9 8080`);
