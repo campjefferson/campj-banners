@@ -42,11 +42,15 @@ if (
 
 let selectorsToHide = null;
 if (selectorsToHideString) {
-  selectorsToHide = selectorsToHideString.split(",");
+  selectorsToHide = selectorsToHideString
+    .split(",")
+    .map((s) => (s.charAt(0) !== "." ? `#${s}` : s));
 }
 
+console.log("hiding", selectorsToHide);
+
 function timeout(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function captureBanner(browser, bannerPath, delay) {
@@ -71,14 +75,14 @@ async function captureBanner(browser, bannerPath, delay) {
   await page.setViewport({
     width: 1024,
     height: 768,
-    deviceScaleFactor: 1
+    deviceScaleFactor: 1,
   });
   const [width, height] = await page.evaluate(
     (wrapperId, selectorsToHide) => {
       let el = document.getElementById(wrapperId);
       try {
         if (selectorsToHide) {
-          selectorsToHide.forEach(selector => {
+          selectorsToHide.forEach((selector) => {
             document.querySelector(selector).style.display = `none`;
             document.querySelector(selector).style.visibility = `hidden`;
           });
@@ -107,7 +111,7 @@ async function captureBanner(browser, bannerPath, delay) {
     path: fileName,
     type: `jpeg`,
     quality: quality,
-    clip: { x: 0, y: 0, width, height }
+    clip: { x: 0, y: 0, width, height },
   });
 
   await page.close();
@@ -129,23 +133,32 @@ async function captureAllBanners(banners, delay = 15000) {
       "--mute-audio",
       "--disable-gpu",
       "--no-sandbox",
-      "--enable-logging"
+      "--enable-logging",
     ],
     executablePath:
-      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
   });
   browser.setMaxListeners(100);
-  await Promise.all(banners.map(b => captureBanner(browser, b, delay)));
+  await Promise.all(banners.map((b) => captureBanner(browser, b, delay)));
   await browser.close();
   return Promise.resolve();
 }
 
 async function generate(dir, delay = 20000) {
-  console.log("dir", dir);
+  console.log("generating banners for the directory", dir);
   cmd.run(`node_modules/.bin/http-server ${dir}`);
   console.log("opened server");
   let rootPath = path.resolve(dir);
-  let banners = glob.sync(`${rootPath}/*/`);
+  let banners = glob.sync(`${rootPath}/*/`, {
+    ignore: [
+      "./node_modules",
+      `${process.cwd()}/node_modules`,
+      "./build",
+      `${process.cwd()}/build`,
+      "./dist",
+      `${process.cwd()}/dist`,
+    ],
+  });
   await timeout(1000);
   await captureAllBanners(banners, delay);
   console.log("all backups created");
