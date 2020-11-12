@@ -6,16 +6,41 @@ const config = pkg.config;
 const findBannerWidthAndHeight = require("./dev/utils")
   .findBannerWidthAndHeight;
 
+const useLists = config.useLists === true;
+
 function createBannerList({ title, links }, addCurrent = false) {
+  if (!title || !links || links.length === 0) {
+    return ``;
+  }
   return `<div class="list">${title ? `<h4>${title}</h4>` : ``}<ul>${links
     .map(
       ({ label, filteredButtonLabel, buttonLabel, url, width, height }, idx) =>
         `<li><button${
           idx === 0 && addCurrent ? ' class="current"' : ""
-        } data-width="${width}" data-height="${height}" data-label="${buttonLabel}" data-url="${url}" >${filteredButtonLabel ||
-          buttonLabel}</button></li>`
+        } data-width="${width}" data-height="${height}" data-label="${buttonLabel}" data-url="${url}" data-title="${title} - ${
+          filteredButtonLabel || buttonLabel
+        }">${filteredButtonLabel || buttonLabel}</button></li>`
     )
     .join("")}</ul></div>`;
+}
+
+function createBannerOptions({ title, links }, addCurrent = true) {
+  if (!title || !links || links.length === 0) {
+    return ``;
+  }
+  const arr = links.map(
+    ({ label, filteredButtonLabel, buttonLabel, url, width, height }, idx) =>
+      `<option${
+        idx === 0 && addCurrent ? ' selected="selected"' : ""
+      } value="${url}" data-width="${width}" data-height="${height}" data-label="${buttonLabel}" data-url="${url}" data-title="${title} - ${
+        filteredButtonLabel || buttonLabel
+      }">${title} - ${filteredButtonLabel || buttonLabel}</option>`
+  );
+
+  arr.unshift(
+    `<option style="background-color: #cccccc;" disabled>${title}</option>`
+  );
+  return arr.join("");
 }
 
 function renderDownloads(archiveName) {
@@ -28,11 +53,12 @@ function renderDownloads(archiveName) {
 function getFilteredLabel(label, filters) {
   label = label.toLowerCase();
 
-  filters.forEach(filter => {
-    if (filter.indexOf("!") === 0) {
+  filters.forEach((filter) => {
+    if (filter.indexOf("!") === 0 || filter.indexOf("=") === 0) {
       filter = filter.substr(1);
     }
     label = label.replace(filter, "");
+    label = label.replace(filter.toLowerCase(), "");
   });
 
   return label.trim();
@@ -59,7 +85,7 @@ module.exports = (archiveName = null) => {
   }
 
   // generate links to banners
-  let links = dirs.map(dir => {
+  let links = dirs.map((dir) => {
     const arr = dir.split("/");
     let label = arr[arr.length - 2];
     let buttonLabel = label.replace(/_/g, " ");
@@ -70,7 +96,7 @@ module.exports = (archiveName = null) => {
 
   let groups = [];
   if (config.lists) {
-    config.lists.forEach(listFilter => {
+    config.lists.forEach((listFilter) => {
       let title = listFilter;
       let filter = listFilter;
       let filters;
@@ -93,26 +119,36 @@ module.exports = (archiveName = null) => {
       groups.push({
         title,
         links: links
-          .filter(l => {
+          .filter((l) => {
             let passes = true;
             for (let i = 0; i < filters.length; i++) {
               let filterToUse = filters[i];
               let isNotFilter = filterToUse.indexOf("!") === 0;
-              if (isNotFilter) {
+              let isExactFilter = filterToUse.indexOf("=") === 0;
+              if (isNotFilter || isExactFilter) {
                 filterToUse = filterToUse.substr(1);
               }
-              let result = l.buttonLabel.toLowerCase().indexOf(filterToUse);
-              passes = isNotFilter ? result === -1 : result >= 0;
+              let result;
+              if (isExactFilter) {
+                result = l.buttonLabel
+                  .toLowerCase()
+                  .split(" ")
+                  .includes(filterToUse.toLowerCase());
+                passes = result;
+              } else {
+                result = l.buttonLabel.toLowerCase().indexOf(filterToUse);
+                passes = isNotFilter ? result === -1 : result >= 0;
+              }
               if (!passes) {
                 return false;
               }
             }
             return true;
           })
-          .map(l => ({
+          .map((l) => ({
             ...l,
-            filteredButtonLabel: getFilteredLabel(l.buttonLabel, filters)
-          }))
+            filteredButtonLabel: getFilteredLabel(l.buttonLabel, filters),
+          })),
       });
     });
   } else {
@@ -122,22 +158,34 @@ module.exports = (archiveName = null) => {
   const bannerLists = groups.map((group, idx) =>
     createBannerList(group, idx === 0)
   );
+  const bannerOptions = groups.map((group, idx) =>
+    createBannerOptions(group, idx === 0)
+  );
+
+  const firstList = groups[0];
+  const firstLink = firstList.links[0];
 
   // output html
   const html = `<html><head><title>${
     pkg.description
   } | Camp Jefferson</title><style>${css}</style></head><body><div id="wrap"><header><h1>${
     pkg.description
-  }</h1><h2 id="banner-title">${
-    links[0].buttonLabel
-  }</h2></header><main><div id="list-container">${bannerLists.join(
-    ""
-  )}</div><iframe id="banner-frame" src="/${
-    links[0].url
-  }/index.html" style="width:${links[0].width}px;height:${
-    links[0].height
-  }px" width="${links[0].width}" height="${
-    links[0].height
+  }</h1><h2 id="banner-title">${firstList.title} - ${
+    firstLink.filteredButtonLabel || firstLink.buttonLabel
+  }</h2></header><main${useLists ? `` : ` class="wrap"`}><div id="banner-select-container">${
+    useLists
+      ? `<div id="list-container">${bannerLists.join("")}</div>`
+      : `<div id="select-container"><span id="hidden-select-value">${
+          firstList.title
+        } - ${
+          firstLink.filteredButtonLabel || firstLink.buttonLabel
+        }</span><div class="select"><select id="banner-select">${bannerOptions}</select></div></div>`
+  }<button id="replay" title="Replay"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+  <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd" />
+</svg><span </button></div><iframe id="banner-frame" src="/${firstLink.url}/index.html" style="width:${
+    firstLink.width
+  }px;height:${firstLink.height}px" width="${firstLink.width}" height="${
+    firstLink.height
   }"></iframe></main><footer><div>${renderDownloads(
     archiveName
   )}<aside>Build: ${now.toLocaleDateString()}</aside></div></footer></div><script>${js}</script></body></html>`;

@@ -9,7 +9,7 @@ let completed = 0;
 async function bannerArchives(allZipFilename) {
   // get banner folders
   const banners = glob.sync(`${process.env.PROJECT_DIR}/dist/*/`, {
-    absolute: false
+    absolute: false,
   });
 
   // create individual banner zip files
@@ -29,13 +29,25 @@ async function bannerArchives(allZipFilename) {
 
     zipFile.outputStream
       .pipe(fs.createWriteStream(`${zipFilename}.zip`))
-      .on("close", function() {
+      .on("close", function () {
         completed++;
         console.log(
           chalk.green.bold(`success`),
           `created ${path.basename(zipFilename)}.zip (${completed} of ${
             banners.length
           })`
+        );
+        // check the file size of the zip file to give us
+        // an idea of the gzipped banner size
+        let zipFileStats = fs.statSync(`${zipFilename}.zip`);
+        let zipFileSizeInBytes = zipFileStats["size"];
+        let zipFileSizeInKilobytes = zipFileSizeInBytes / 1000.0;
+        console.log(
+          chalk.yellow.bold(`File Size: `),
+          `${zipFileSizeInKilobytes}KB`,
+          zipFileSizeInKilobytes > 150
+            ? chalk.red.bold(`\u2717 potentially too large!`)
+            : chalk.green.bold(`\u2713 good!`)
         );
         if (completed === banners.length) {
           allArchive(allZipFilename);
@@ -67,7 +79,7 @@ async function allArchive(allZipFilename) {
         path.resolve(process.env.PROJECT_DIR, `./dist/${allZipFilename}.zip`)
       )
     )
-    .on("close", function() {
+    .on("close", function () {
       console.log(chalk.green.bold(`success`), `created ${allZipFilename}.zip`);
     });
 

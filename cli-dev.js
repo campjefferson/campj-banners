@@ -8,6 +8,7 @@ const path = require("path");
 const watch = require("glob-watcher");
 const Bundler = require("parcel-bundler");
 const cmd = require("node-cmd");
+const opn = require("opn");
 const Promise = require("bluebird").Promise;
 
 const generateFrontMatter = require("./generateFrontMatter");
@@ -21,20 +22,21 @@ process.chdir(__dirname);
 const bundles = [
   `${wd}/src/**/index.hbs`,
   `${wd}/src/**/sprite-*.png`,
-  `!${wd}/src/**/sprite/*`
+  `!${wd}/src/**/sprite/*`,
 ];
 
 const bundler = new Bundler(bundles, {
   cache: false,
   detailedReport: true,
   autoInstall: false,
-  outDir: `${wd}/dist`
+  outDir: `${wd}/dist`,
+  hmr: true,
 });
 
 let regenTimeout = {};
 let reloadTimeout;
 
-bundler.on("bundled", async bundle => {
+bundler.on("bundled", async (bundle) => {
   console.log(chalk.yellow.bold("info"), "bundle complete.");
   try {
     console.log(chalk.yellow.bold("info"), "generating dev index file...");
@@ -47,8 +49,9 @@ bundler.on("bundled", async bundle => {
 });
 
 async function run() {
-  await bundler.serve(3000);
+  await bundler.serve(3000, false);
   runWatcher(bundler);
+  opn("http://localhost:3000/index.html");
 }
 
 async function regenerateAssetCss(filepath) {
@@ -73,7 +76,7 @@ function regen(msg, filepath) {
 
 function runWatcher(bundler) {
   const watcher = watch([`${wd}/src/*/img/*.{png,gif,jpg,svg}`]);
-  watcher.on("add", file => {
+  watcher.on("add", (file) => {
     if (file.indexOf("sprite-") === -1) {
       regen("image added", file);
       return;
@@ -81,7 +84,7 @@ function runWatcher(bundler) {
     reloadBrowsers(bundler);
   });
 
-  watcher.on("change", file => {
+  watcher.on("change", (file) => {
     if (file.indexOf("sprite-") === -1) {
       regen("image changed", file);
       return;
@@ -89,7 +92,7 @@ function runWatcher(bundler) {
     reloadBrowsers(bundler);
   });
 
-  watcher.on("unlink", file => {
+  watcher.on("unlink", (file) => {
     if (file.indexOf("sprite-") === -1) {
       regen("image removed", file);
       return;
@@ -98,13 +101,13 @@ function runWatcher(bundler) {
   });
 
   const spriteWatcher = watch([`${wd}/src/*/sprite/*.{png,gif,jpg}`]);
-  spriteWatcher.on("add", filepath => {
+  spriteWatcher.on("add", (filepath) => {
     regen("sprite image added", filepath);
   });
-  spriteWatcher.on("change", filepath => {
+  spriteWatcher.on("change", (filepath) => {
     regen("sprite image changed", filepath);
   });
-  spriteWatcher.on("unlink", filepath => {
+  spriteWatcher.on("unlink", (filepath) => {
     regen("sprite image removed", filepath);
   });
 }
@@ -114,7 +117,7 @@ function reloadBrowsers(bundler) {
   reloadTimeout = setTimeout(() => {
     try {
       bundler.hmr.broadcast({
-        type: "reload"
+        type: "reload",
       });
     } catch (e) {
       console.log(chalk.red.bold("error reloading"), e);
@@ -122,7 +125,7 @@ function reloadBrowsers(bundler) {
   }, 500);
 }
 
-(async function() {
+(async function () {
   const rootDir = wd;
   const cacheDir = `${rootDir}/.cache`;
   const distDir = `${rootDir}/dist`;

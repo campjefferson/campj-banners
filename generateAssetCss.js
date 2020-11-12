@@ -7,7 +7,7 @@ const camelCase = require("camelcase");
 const chalk = require("chalk");
 
 const spriteSmithRunAsync = Promise.promisify(Spritesmith.run, {
-  multiArgs: true
+  multiArgs: true,
 });
 
 function getProjectAssets(bannerId) {
@@ -29,12 +29,12 @@ function getProjectAssets(bannerId) {
   }
   const artboards = bannerSettings.artboards;
   let result = {};
-  artboards.forEach(ab => {
+  artboards.forEach((ab) => {
     const assets = projectSettings.assets[ab];
     if (!assets) {
       return;
     }
-    assets.forEach(asset => {
+    assets.forEach((asset) => {
       result[asset.exportName] = asset;
     });
   });
@@ -54,7 +54,7 @@ function getNameAndResolution(n, list) {
   }
   let assetName = baseFilename.trim();
   let name = camelCase(baseFilename);
-  const existing = list.filter(item => item.exportName === name);
+  const existing = list.filter((item) => item.exportName === name);
   if (existing.length > 0) {
     name = `${name}-${existing.length}`;
   }
@@ -121,9 +121,9 @@ async function generate(globPattern) {
       fs.mkdirSync(`${dir}/img`);
     }
     if (images.length > 0) {
-      sass = `.sprite{background:url("./img/${spriteName}") no-repeat top left;`;
+      sass = `.sprite{background:url("./img/${spriteName}") no-repeat top left; backface-visibility: hidden; image-rendering: crisp-edges; image-rendering: -moz-crisp-edges; image-rendering: -o-crisp-edges; image-rendering: -webkit-optimize-contrast; -ms-interpolation-mode: nearest-neighbor;`;
       if (projectAssets) {
-        images = images.filter(file => {
+        images = images.filter((file) => {
           const filename = path.basename(file).replace(path.extname(file), "");
           return (
             projectAssets[filename] !== undefined &&
@@ -135,18 +135,18 @@ async function generate(globPattern) {
       const [result] = await spriteSmithRunAsync({ src: images, padding: 2 });
       const ref = [];
       const names = Object.keys(result.coordinates);
-      names.forEach(n => {
+      names.forEach((n) => {
         let props = result.coordinates[n];
         let [name, resolution, assetName] = getNameAndResolution(n, ref);
         ref.push({
           name,
           resolution,
           assetProps: projectAssets ? projectAssets[assetName] : null,
-          ...props
+          ...props,
         });
       });
       sass = `${sass}${ref
-        .map(item =>
+        .map((item) =>
           outputSassForSprite(
             item,
             result.properties.width,
@@ -172,10 +172,10 @@ async function generate(globPattern) {
 
     images = glob
       .sync(`${dir}/img/*.*`)
-      .filter(name => name.indexOf(`sprite-`) === -1);
+      .filter((name) => name.indexOf(`sprite-`) === -1);
 
     if (images.length > 0) {
-      images.forEach(imgFileName => {
+      images.forEach((imgFileName) => {
         const assetName = path.basename(imgFileName);
         const assetId = assetName.substr(0, assetName.length - 4);
         const assetSettings = projectAssets && projectAssets[assetId];
@@ -186,7 +186,9 @@ async function generate(globPattern) {
             assetSettings.height
           )}px; background-size:100% 100%; top:${Math.round(
             assetSettings.y
-          )}px; left:${Math.round(assetSettings.x)}px; }`;
+          )}px; left:${Math.round(
+            assetSettings.x
+          )}px; backface-visibility: hidden; image-rendering: crisp-edges; image-rendering: -moz-crisp-edges; image-rendering: -o-crisp-edges; image-rendering: -webkit-optimize-contrast; -ms-interpolation-mode: nearest-neighbor;}`;
           console.log(
             chalk.green.bold(`success`),
             `generated the css for ${path.basename(dir)}/img/${assetName}`

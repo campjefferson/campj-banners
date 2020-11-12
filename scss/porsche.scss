@@ -1,8 +1,8 @@
 @mixin porsche-border($width, $height, $thickness) {
-  border: $thickness + 0px solid white;
+  box-shadow: inset 0px 0px 0px $thickness+0px white;
   box-sizing: border-box;
-  @include size($width - 2, $height - 2);
-  @include position(1, 1);
+  @include size($width, $height);
+  @include position(0, 0);
 }
 
 @mixin porsche-footer($orientation: '300x250') {

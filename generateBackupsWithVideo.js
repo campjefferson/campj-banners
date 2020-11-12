@@ -2,7 +2,7 @@ const Promise = require("bluebird").Promise;
 const path = require("path");
 const glob = require("glob");
 const chalk = require("chalk");
-// const cmd = require("node-cmd");
+const cmd = require("node-cmd");
 const puppeteer = require("puppeteer");
 const baseDirName =
   process.argv.indexOf("--dir") >= 0
@@ -65,7 +65,8 @@ async function captureBanner(browser, bannerPath, delay) {
   fileNamePart = `${path.dirname(fileNamePart)}/${path.basename(fileNamePart)}`;
   // const fileName = fileNamePart + ".jpg";
   const fileName = `${fileNamePart}/${fallbackPath}fallback.jpg`;
-  const pageUrl = `file://${bannerPath}index.html`;
+  const serverBannerPath = bannerPath.replace(baseDir, "");
+  const pageUrl = `http://localhost:8080${serverBannerPath}index.html`;
   // puppeteer magic
   let page = await browser.newPage();
   try {
@@ -146,8 +147,8 @@ async function captureAllBanners(banners, delay = 15000) {
       "--no-sandbox",
       "--enable-logging",
     ],
-    // executablePath:
-    //   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    executablePath:
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
   });
   browser.setMaxListeners(100);
   await Promise.all(banners.map((b) => captureBanner(browser, b, delay)));
@@ -157,8 +158,8 @@ async function captureAllBanners(banners, delay = 15000) {
 
 async function generate(dir, delay = 20000) {
   console.log("generating banners for the directory", dir);
-  // cmd.run(`node_modules/.bin/http-server ${dir}`);
-  // console.log("opened server");
+  cmd.run(`node_modules/.bin/http-server ${dir}`);
+  console.log("opened server");
   let rootPath = path.resolve(dir);
   let banners = glob.sync(`${rootPath}/*/`, {
     ignore: ["./node_modules", `${rootPath}/node_modules`],
@@ -166,7 +167,7 @@ async function generate(dir, delay = 20000) {
   await timeout(1000);
   await captureAllBanners(banners, delay);
   console.log("all backups created");
-  // cmd.run(`kill -9 8080`);
+  cmd.run(`kill -9 $(lsof -t -i tcp:8080)`);
 }
 
 generate(baseDir);
