@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 process.env.NODE_ENV = "development";
 process.env.PARCEL_AUTOINSTALL = "false";
+
+const fs = require("fs");
 const wd = process.cwd().toString();
 process.env.PROJECT_DIR = wd;
 const chalk = require("chalk");
 const path = require("path");
+const glob = require("glob");
 const watch = require("glob-watcher");
 const Bundler = require("parcel-bundler");
 const cmd = require("node-cmd");
@@ -50,6 +53,8 @@ bundler.on("bundled", async (bundle) => {
 
 async function run() {
   await bundler.serve(3000, false);
+  await fixWindowsCSSPathnames();
+  await fixWindowsFrontMatter();
   runWatcher(bundler);
   opn("http://localhost:3000/index.html");
 }
@@ -62,6 +67,28 @@ async function regenerateAssetCss(filepath) {
   regenTimeout[filepath] = null;
 }
 
+const YAMLFrontMatter = /^---(.|\n)*?---/;
+
+function fixWindowsFrontMatter() {
+  const files = glob.sync(`${wd}/dist/*.html`);
+  for (let i = 0; i < files.length; i++) {
+    let file = files[i];
+    let loadedFile = fs.readFileSync(file, `utf-8`);
+    loadedFile = loadedFile.replace(YAMLFrontMatter, "");
+    fs.writeFileSync(file, loadedFile, `utf-8`);
+  }
+}
+
+function fixWindowsCSSPathnames() {
+  const files = glob.sync(`${wd}/dist/*.css`);
+  for (let i = 0; i < files.length; i++) {
+    let file = files[i];
+    let loadedFile = fs.readFileSync(file, `utf-8`);
+    loadedFile = loadedFile.replace(/\\/g, "/");
+    fs.writeFileSync(file, loadedFile, `utf-8`);
+  }
+}
+
 function regen(msg, filepath) {
   console.warn(chalk.yellow.bold("info"), msg, filepath);
   const spriteFolderPath = path.dirname(filepath);
@@ -71,6 +98,10 @@ function regen(msg, filepath) {
   }
   regenTimeout[bannerFolderPath] = setTimeout(() => {
     regenerateAssetCss(filepath);
+
+    regenTimeout[bannerFolderPath] = setTimeout(() => {
+      fixWindowsCSSPathnames();
+    }, 300);
   }, 300);
 }
 

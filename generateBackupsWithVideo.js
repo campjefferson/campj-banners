@@ -9,9 +9,10 @@ const baseDirName =
     ? process.argv[process.argv.indexOf("--dir") + 1]
     : null;
 
-const baseDir = baseDirName
+let baseDir = (baseDirName
   ? path.resolve(process.cwd(), baseDirName)
-  : process.cwd();
+  : process.cwd()
+).replace(/\\/g, "/");
 
 const wrapperId =
   process.argv.indexOf("--wrapper") >= 0
@@ -49,6 +50,9 @@ if (selectorsToHideString) {
 
 console.log("hiding", selectorsToHide);
 
+const platform =
+  process.platform && process.platform.indexOf(`dar`) >= 0 ? `mac` : `windows`;
+
 function timeout(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -66,12 +70,16 @@ async function captureBanner(browser, bannerPath, delay) {
   // const fileName = fileNamePart + ".jpg";
   const fileName = `${fileNamePart}/${fallbackPath}fallback.jpg`;
   const serverBannerPath = bannerPath.replace(baseDir, "");
-  const pageUrl = `http://localhost:8080${serverBannerPath}index.html`;
+  const pageUrl = `${
+    platform === `mac` ? `http://localhost:8080` : `file://${baseDir}`
+  }${serverBannerPath}index.html`;
   // puppeteer magic
   let page = await browser.newPage();
   try {
+    await page.setUserAgent(
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3419.0 Safari/537.36"
+    );
     await page.goto(pageUrl, { waitUntil: ["load", "networkidle0"] });
-
     await page.emulateMedia("screen");
     await page.setViewport({
       width: 1024,
@@ -79,9 +87,10 @@ async function captureBanner(browser, bannerPath, delay) {
       deviceScaleFactor: 1,
     });
 
-    const [width, height] = await page.evaluate(
+    const [width, height, errors] = await page.evaluate(
       (wrapperId, selectorsToHide) => {
         let el = document.getElementById(wrapperId);
+        let errors;
         try {
           if (selectorsToHide) {
             selectorsToHide.forEach((selector) => {
@@ -89,11 +98,13 @@ async function captureBanner(browser, bannerPath, delay) {
               document.querySelector(selector).style.visibility = `hidden`;
             });
           }
-        } catch (e) {}
-        if (el) {
-          return [el.clientWidth, el.clientHeight];
+        } catch (e) {
+          errors = e;
         }
-        return [false, false];
+        if (el) {
+          return [el.clientWidth, el.clientHeight, errors];
+        }
+        return [false, false, errors];
       },
       wrapperId,
       selectorsToHide
@@ -106,6 +117,7 @@ async function captureBanner(browser, bannerPath, delay) {
         bannerPath,
         "."
       );
+      console.log(chalk.red.bold(`errors`), errors);
       return Promise.resolve();
     }
     await timeout(delay);
@@ -123,43 +135,49 @@ async function captureBanner(browser, bannerPath, delay) {
       bannerPath,
       "was generated."
     );
-  } catch {
+  } catch (e) {
     console.log(
       chalk.red.bold(`warning`),
       "no backup gif was generated for",
       bannerPath,
       "."
     );
-    return Promise.resolve();
-  } finally {
-    return Promise.resolve();
+    console.log(chalk.red.bold(`errors`), e);
   }
 }
 
 async function captureAllBanners(banners, delay = 15000) {
   const browser = await puppeteer.launch({
-    headless: false,
+    headless: true,
+    ignoreHTTPSErrors: true,
     args: [
-      "--headless",
+      "--window-size=1920x1080",
       "--hide-scrollbars",
       "--mute-audio",
       "--disable-gpu",
       "--no-sandbox",
       "--enable-logging",
+      "--disable-dev-shm-usage",
+      "--ignore-certificate-errors",
     ],
     executablePath:
-      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      platform === `mac`
+        ? "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+        : "C:\\Program Files\\Google\\Chrome\\Application\\chrome",
   });
   browser.setMaxListeners(100);
   await Promise.all(banners.map((b) => captureBanner(browser, b, delay)));
+  // await captureBanner(browser, banners[0], delay)
   await browser.close();
   return Promise.resolve();
 }
 
 async function generate(dir, delay = 20000) {
   console.log("generating banners for the directory", dir);
+  // console.log("running", `node_modules/.bin/http-server ${dir}`);
   cmd.run(`node_modules/.bin/http-server ${dir}`);
   console.log("opened server");
+  // await timeout(30000)
   let rootPath = path.resolve(dir);
   let banners = glob.sync(`${rootPath}/*/`, {
     ignore: ["./node_modules", `${rootPath}/node_modules`],

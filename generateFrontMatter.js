@@ -1,13 +1,14 @@
-const glob = require('glob');
-const fs = require('fs');
-const matter = require('gray-matter');
-const chalk = require('chalk');
-const { getBannerAttributes } = require('./dev/utils');
+const glob = require("glob");
+const fs = require("fs");
+const matter = require("gray-matter");
+const chalk = require("chalk");
+const { getBannerAttributes } = require("./dev/utils");
 
-const YAMLFrontMatter = /^---(.|\n)*?---/;
+const YAMLFrontMatter = /^---(.|\n)*---/;
+// const YAMLFrontMatter2 = /---(.|\n)*?---/g;
 
 module.exports = () => {
-  console.log(chalk.black.bold.bgGreen(' Generating frontMatter... '));
+  console.log(chalk.black.bold.bgGreen(" Generating frontMatter... "));
   const entryFiles = glob.sync(`${process.env.PROJECT_DIR}/src/**/*.hbs`);
 
   for (let i = 0; i < entryFiles.length; i++) {
@@ -23,14 +24,11 @@ module.exports = () => {
 
     let newFrontMatter = `${matter.stringify(``, data)}`;
     newFrontMatter = newFrontMatter.trim();
-    let hasFrontMatter = file.search(YAMLFrontMatter) >= 0;
-
+    let hasFrontMatter = matter.test(file);
+    // console.log({ filePath, hasFrontMatter });
     if (hasFrontMatter) {
-      file = file.replace(YAMLFrontMatter, newFrontMatter);
-      fs.writeFileSync(filePath, file, `utf-8`);
-    } else {
-      fs.writeFileSync(filePath, `${newFrontMatter}\n${file}`);
+      fs.writeFileSync(filePath, `${newFrontMatter}\n${fm.content}`);
     }
   }
-  console.log(chalk.black.bold.bgGreen(' Done generating frontMatter! '));
+  console.log(chalk.black.bold.bgGreen(" Done generating frontMatter! "));
 };

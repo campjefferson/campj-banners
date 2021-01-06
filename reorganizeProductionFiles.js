@@ -1,6 +1,6 @@
-const glob = require('glob');
-const fs = require('fs-extra');
-const path = require('path');
+const glob = require("glob");
+const fs = require("fs-extra");
+const path = require("path");
 
 const rootDir = `${process.env.PROJECT_DIR}/dist`;
 
