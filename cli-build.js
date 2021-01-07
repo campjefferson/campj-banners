@@ -70,4 +70,3 @@ const buildOutput = `${wd}/dist`;
   const terserPath = path.resolve(wd, ".terserrc");
   await getAsync(`rm -r ${terserPath} || true`);
 })();
-//
