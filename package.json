@@ -1,6 +1,6 @@
 {
   "name": "@campj/banners",
-  "version": "2.2.0",
+  "version": "2.2.2",
   "description": "Camp Jefferson utilities for banner production",
   "main": "index.js",
   "scripts": {
@@ -40,6 +40,7 @@
     "http-server": "^0.12.1",
     "jpeg-js": "^0.3.7",
     "node-cmd": "^3.0.0",
+    "normalize-path": "^3.0.0",
     "opn": "^6.0.0",
     "parcel-bundler": "^1.12.3",
     "puppeteer": "^1.20.0",

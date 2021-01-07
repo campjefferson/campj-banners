@@ -18,6 +18,8 @@ const generateFrontMatter = require("./generateFrontMatter");
 const generateIndex = require("./generateIndex");
 const generateAssetCss = require("./generateAssetCss");
 const setup = require("./setup");
+const normalizePath = require("normalize-path");
+const { normalize } = require("path");
 
 const getAsync = Promise.promisify(cmd.get, { multiArgs: true, context: cmd });
 process.chdir(__dirname);
@@ -98,15 +100,14 @@ function regen(msg, filepath) {
   }
   regenTimeout[bannerFolderPath] = setTimeout(() => {
     regenerateAssetCss(filepath);
-
     regenTimeout[bannerFolderPath] = setTimeout(() => {
       fixWindowsCSSPathnames();
-    }, 300);
-  }, 300);
+    }, 600);
+  }, 600);
 }
 
 function runWatcher(bundler) {
-  const watcher = watch([`${wd}/src/*/img/*.{png,gif,jpg,svg}`]);
+  const watcher = watch([normalizePath(`${wd}/src/*/img/*.{png,gif,jpg,svg}`)]);
   watcher.on("add", (file) => {
     if (file.indexOf("sprite-") === -1) {
       regen("image added", file);
@@ -131,7 +132,9 @@ function runWatcher(bundler) {
     reloadBrowsers(bundler);
   });
 
-  const spriteWatcher = watch([`${wd}/src/*/sprite/*.{png,gif,jpg}`]);
+  const spriteWatcher = watch([
+    normalizePath(`${wd}/src/*/sprite/*.{png,gif,jpg}`),
+  ]);
   spriteWatcher.on("add", (filepath) => {
     regen("sprite image added", filepath);
   });
