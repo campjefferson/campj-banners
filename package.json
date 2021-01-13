@@ -1,6 +1,6 @@
 {
   "name": "@campj/banners",
-  "version": "2.2.2",
+  "version": "2.3.0",
   "description": "Camp Jefferson utilities for banner production",
   "main": "index.js",
   "scripts": {

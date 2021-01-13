@@ -19,7 +19,6 @@ const generateIndex = require("./generateIndex");
 const generateAssetCss = require("./generateAssetCss");
 const setup = require("./setup");
 const normalizePath = require("normalize-path");
-const { normalize } = require("path");
 
 const getAsync = Promise.promisify(cmd.get, { multiArgs: true, context: cmd });
 process.chdir(__dirname);
@@ -51,11 +50,20 @@ bundler.on("bundled", async (bundle) => {
     console.log(chalk.red.bold("error"), "error generating dev index file");
     console.log(e);
   }
+
+  try {
+    console.log(chalk.yellow.bold("info"), "fixing css pathnames...");
+    fixWindowsCSSPathnames();
+    console.log(chalk.green.bold("success"), "fixed css pathnames!");
+  } catch (e) {
+    console.log(chalk.red.bold("error"), "error fixing css pathnames");
+    console.log(e);
+  }
 });
 
 async function run() {
+  hasFixedPathnames = false;
   await bundler.serve(3000, false);
-  await fixWindowsCSSPathnames();
   await fixWindowsFrontMatter();
   runWatcher(bundler);
   opn("http://localhost:3000/index.html");
@@ -64,7 +72,7 @@ async function run() {
 async function regenerateAssetCss(filepath) {
   const spriteFolderPath = path.dirname(filepath);
   const bannerFolderPath = path.dirname(spriteFolderPath);
-  generateAssetCss(`${bannerFolderPath}/`);
+  await generateAssetCss(`${bannerFolderPath}/`);
   clearTimeout(regenTimeout[bannerFolderPath]);
   regenTimeout[filepath] = null;
 }
@@ -89,9 +97,10 @@ function fixWindowsCSSPathnames() {
     loadedFile = loadedFile.replace(/\\/g, "/");
     fs.writeFileSync(file, loadedFile, `utf-8`);
   }
+  hasFixedPathnames = true;
 }
 
-function regen(msg, filepath) {
+async function regen(msg, filepath) {
   console.warn(chalk.yellow.bold("info"), msg, filepath);
   const spriteFolderPath = path.dirname(filepath);
   const bannerFolderPath = path.dirname(spriteFolderPath);
@@ -99,15 +108,18 @@ function regen(msg, filepath) {
     clearTimeout(regenTimeout[bannerFolderPath]);
   }
   regenTimeout[bannerFolderPath] = setTimeout(() => {
-    regenerateAssetCss(filepath);
-    regenTimeout[bannerFolderPath] = setTimeout(() => {
-      fixWindowsCSSPathnames();
-    }, 600);
+    async function regenAsync() {
+      await regenerateAssetCss(filepath);
+    }
+    regenAsync();
   }, 600);
 }
 
 function runWatcher(bundler) {
-  const watcher = watch([normalizePath(`${wd}/src/*/img/*.{png,gif,jpg,svg}`)]);
+  const watcher = watch([
+    normalizePath(`${wd}/src/*/img/*.{png,gif,jpg,svg}`),
+    normalizePath(`${wd}/src/*/banner.scss`),
+  ]);
   watcher.on("add", (file) => {
     if (file.indexOf("sprite-") === -1) {
       regen("image added", file);

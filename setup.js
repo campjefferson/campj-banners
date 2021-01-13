@@ -1,7 +1,7 @@
-const fs = require('fs');
-const path = require('path');
-const chalk = require('chalk');
-const glob = require('glob');
+const fs = require("fs");
+const path = require("path");
+const chalk = require("chalk");
+const glob = require("glob");
 
 function getNetlifyTomlDefaults() {
   return `[build]
@@ -55,7 +55,7 @@ function getScssDefaults() {
 module.exports = async () => {
   console.log(
     chalk.black.bold.bgGreen(
-      ' Ensuring project files & folders are set up properly... '
+      " Ensuring project files & folders are set up properly... "
     )
   );
 
@@ -67,7 +67,7 @@ module.exports = async () => {
   if (!fs.existsSync(netlifyTomlPath)) {
     fs.writeFileSync(netlifyTomlPath, getNetlifyTomlDefaults(), `utf-8`);
     console.log(
-      chalk.yellow.bold('info'),
+      chalk.yellow.bold("info"),
       `created the file ${path.basename(netlifyTomlPath)}`
     );
   }
@@ -75,13 +75,13 @@ module.exports = async () => {
   if (!fs.existsSync(gitignorePath)) {
     fs.writeFileSync(gitignorePath, getGitIgnoreDefaults(), `utf-8`);
     console.log(
-      chalk.yellow.bold('info'),
+      chalk.yellow.bold("info"),
       `created the file ${path.basename(gitignorePath)}`
     );
   }
 
   const entryFolders = glob.sync(`${process.env.PROJECT_DIR}/src/*/`);
-  entryFolders.forEach(dir => {
+  entryFolders.forEach((dir) => {
     const baseDirName = path.basename(dir);
     const hbsPath = path.resolve(`${dir}/index.hbs`);
     const jsPath = path.resolve(`${dir}/banner.js`);
@@ -89,24 +89,24 @@ module.exports = async () => {
     const xdScssPath = path.resolve(`${dir}/xd.scss`);
 
     const paths = [hbsPath, jsPath, scssPath];
-    paths.forEach(file => {
+    paths.forEach((file) => {
       if (!fs.existsSync(file)) {
         const ext = path.extname(file);
         let defaults = ``;
         switch (ext) {
-          case '.hbs':
+          case ".hbs":
             defaults = getHbsDefaults();
             break;
-          case '.scss':
+          case ".scss":
             defaults = getScssDefaults();
             break;
-          case '.js':
+          case ".js":
             defaults = getJsDefaults();
             break;
         }
         fs.writeFileSync(file, defaults, `utf-8`);
         console.log(
-          chalk.yellow.bold('info'),
+          chalk.yellow.bold("info"),
           `created the file ${path.basename(file)} in ${baseDirName}`
         );
       }
@@ -114,11 +114,11 @@ module.exports = async () => {
     if (!fs.existsSync(xdScssPath)) {
       fs.writeFileSync(xdScssPath, ``, `utf-8`);
       console.log(
-        chalk.yellow.bold('info'),
+        chalk.yellow.bold("info"),
         `created the file ${path.basename(xdScssPath)} in ${baseDirName}`
       );
     }
   });
 
-  console.log(chalk.black.bold.bgGreen(' Setup complete. '));
+  console.log(chalk.black.bold.bgGreen(" Setup complete. "));
 };
