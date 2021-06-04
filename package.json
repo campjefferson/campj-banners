@@ -40,7 +40,7 @@
     "handlebars-layouts": "^3.1.4",
     "handlebars-wax": "^6.1.0",
     "http-server": "^0.12.1",
-    "jpeg-js": "^0.3.7",
+    "jpeg-js": "^0.4.0",
     "node-cmd": "^3.0.0",
     "normalize-path": "^3.0.0",
     "opn": "^6.0.0",
