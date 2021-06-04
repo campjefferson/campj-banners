@@ -98,6 +98,12 @@ async function generate(globPattern) {
   }
   for (let i = 0; i < dirs.length; i++) {
     let dir = dirs[i];
+    if (
+      dir === `${process.env.PROJECT_DIR}/src/` ||
+      dir === `${process.env.PROJECT_DIR}/src`
+    ) {
+      continue;
+    }
     if (dir.charAt(dir.length - 1) === `/`) {
       dir = dir.substr(0, dir.length - 1);
     }
@@ -108,6 +114,10 @@ async function generate(globPattern) {
     spriteFileName = spriteFileName.replace(/(\.-src)/g, "");
     spriteFileName = spriteFileName.replace(/src/g, "");
     const bannerId = spriteFileName.substr(1);
+    // stop making a sprite in the 'src' folder
+    if (spriteFileName === "") {
+      continue;
+    }
 
     const projectAssets = getProjectAssets(bannerId);
     const spriteName = `sprite${spriteFileName.toLowerCase()}.png`;

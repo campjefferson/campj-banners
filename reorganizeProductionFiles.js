@@ -13,6 +13,9 @@ module.exports = async () => {
     if (cssUrlMatches) {
       for (let j = 0; j < cssUrlMatches.length; j++) {
         let match = cssUrlMatches[j];
+        if (match.indexOf(`base64`) >= 0) {
+          continue;
+        }
         let imageFileName = match.substr(4, match.length - 5);
         let fileName = `${rootDir}/${imageFileName}`;
         let newFileName = `${dir}/${imageFileName}`;

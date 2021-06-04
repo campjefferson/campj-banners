@@ -1,7 +1,16 @@
+const fs = require("fs");
 const path = require("path");
 const glob = require("glob");
 const chalk = require("chalk");
 const puppeteer = require("puppeteer");
+const pkg = require(process.env.PROJECT_DIR + "/package.json");
+
+const config = pkg.config;
+
+const backupQuality = config.backupQuality || 80;
+const backupQualities = config.backupQualities || {};
+
+const bannerSelector = config.bannerSelector || null;
 
 function timeout(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -19,50 +28,67 @@ async function captureBanner(browser, bannerPath, delay) {
   fileNamePart = `${path.dirname(fileNamePart)}/${path.basename(fileNamePart)}`;
   const fileName = fileNamePart + ".jpg";
   const pageUrl = `file://${bannerPath}index.html`;
-
+  const bannerName = path.basename(fileNamePart);
   // puppeteer magic
   const page = await browser.newPage();
 
   await page.goto(pageUrl);
   await page.emulateMedia("screen");
-  await page.setViewport({
-    width: 1024,
-    height: 768,
-    deviceScaleFactor: 1,
-  });
 
-  const [width, height] = await page.evaluate(() => {
-    let el = document.getElementById("ad");
+  const screenshotQuality =
+    backupQualities[path.basename(fileNamePart)] || backupQuality;
+  // console.log({ file: path.basename(fileNamePart), screenshotQuality });
+
+  const [width, height] = await page.evaluate((bannerSelector) => {
+    let el = bannerSelector
+      ? document.querySelector(bannerSelector)
+      : document.getElementById("ad");
     if (el) {
       return [el.clientWidth, el.clientHeight];
     }
     return [false, false];
-  });
+  }, bannerSelector);
 
   if (!width || !height) {
     await page.close();
     console.log(
       chalk.red.bold(`warning`),
       "no backup image was generated for",
-      bannerPath,
+      bannerName,
       "."
     );
     return Promise.resolve();
   }
+  await page.setViewport({
+    width: width,
+    height: height,
+    deviceScaleFactor: 1,
+  });
   await timeout(delay);
   await page.screenshot({
     path: fileName,
     type: `jpeg`,
-    quality: 80,
-    clip: { x: 0, y: 0, width, height },
+    quality: screenshotQuality,
   });
   await page.close();
   console.log(
     chalk.green.bold(`success`),
     "backup image for",
-    bannerPath,
+    bannerName,
     "was generated."
   );
+
+  await timeout(10);
+  let stats = fs.statSync(fileName);
+  let fileSizeInBytes = stats.size;
+  let fileSizeInKilobytes = fileSizeInBytes / 1000.0;
+  if (fileSizeInKilobytes > 40) {
+    console.log(
+      chalk.red.bold(
+        `\u2717 The backup image for ${bannerName} is too large! (${fileSizeInKilobytes}kb - should be < 40kb)`
+      )
+    );
+  }
   return Promise.resolve();
 }
 

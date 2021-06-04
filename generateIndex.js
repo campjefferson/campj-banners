@@ -3,8 +3,8 @@ const fs = require("fs-extra");
 const path = require("path");
 const pkg = require(process.env.PROJECT_DIR + "/package.json");
 const config = pkg.config;
-const findBannerWidthAndHeight = require("./dev/utils")
-  .findBannerWidthAndHeight;
+const findBannerWidthAndHeight =
+  require("./dev/utils").findBannerWidthAndHeight;
 
 const useLists = config.useLists === true;
 
@@ -166,7 +166,7 @@ module.exports = (archiveName = null) => {
   const firstLink = firstList.links[0];
 
   // output html
-  const html = `<html><head><title>${
+  const html = `<html><head><meta charset="UTF-8" /><meta httpequiv="x-ua-compatible" content="ie=edge" /><meta name="viewport" content="width=device-width,initial-scale=1.0,minimum-scale=1"/><title>${
     pkg.description
   } | Camp Jefferson</title><style>${css}</style></head><body><div id="wrap"><header><h1>${
     pkg.description

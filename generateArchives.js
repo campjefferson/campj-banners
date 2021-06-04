@@ -24,7 +24,12 @@ async function bannerArchives(allZipFilename) {
       const f = files[k];
       const aFile = f.split("/");
       const filenameInZipFile = aFile[aFile.length - 1];
-      zipFile.addFile(f, filenameInZipFile);
+      try {
+        zipFile.addFile(f, filenameInZipFile);
+      } catch (e) {
+        // nothing
+        console.log("error adding ", filenameInZipFile);
+      }
     }
 
     zipFile.outputStream
@@ -67,9 +72,20 @@ async function allArchive(allZipFilename) {
     let filename = path.basename(files[i]);
     let backupImagePath = `${files[i].substr(0, files[i].length - 3)}jpg`;
     let backupImageFilename = path.basename(backupImagePath);
+
     if (fs.existsSync(backupImagePath)) {
-      zipFile.addFile(files[i], filename);
-      zipFile.addFile(backupImagePath, backupImageFilename);
+      try {
+        zipFile.addFile(files[i], filename);
+      } catch (e) {
+        // nothing
+        console.log("error adding ", filename);
+      }
+      try {
+        zipFile.addFile(backupImagePath, backupImageFilename);
+      } catch (e) {
+        // nothing
+        console.log("error adding ", backupImageFilename);
+      }
     }
   }
 

@@ -19,6 +19,11 @@ const wrapperId =
     ? process.argv[process.argv.indexOf("--wrapper") + 1]
     : `ad`;
 
+const wrapperClass =
+  process.argv.indexOf("--wrapperclass") >= 0
+    ? process.argv[process.argv.indexOf("--wrapperclass") + 1]
+    : `ad`;
+
 const quality =
   process.argv.indexOf("--quality") >= 0
     ? parseInt(process.argv[process.argv.indexOf("--quality") + 1])
@@ -88,8 +93,10 @@ async function captureBanner(browser, bannerPath, delay) {
     });
 
     const [width, height, errors] = await page.evaluate(
-      (wrapperId, selectorsToHide) => {
-        let el = document.getElementById(wrapperId);
+      (wrapperId, wrapperClass, selectorsToHide) => {
+        let el = wrapperClass
+          ? document.querySelector(`.${wrapperClass}`)
+          : document.getElementById(wrapperId);
         let errors;
         try {
           if (selectorsToHide) {
@@ -107,6 +114,7 @@ async function captureBanner(browser, bannerPath, delay) {
         return [false, false, errors];
       },
       wrapperId,
+      wrapperClass,
       selectorsToHide
     );
     if (!width || !height) {
@@ -188,4 +196,5 @@ async function generate(dir, delay = 20000) {
   cmd.run(`kill -9 $(lsof -t -i tcp:8080)`);
 }
 
+console.log("HIHIHIHIH");
 generate(baseDir);

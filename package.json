@@ -1,6 +1,6 @@
 {
   "name": "@campj/banners",
-  "version": "2.3.0",
+  "version": "2.6.7",
   "description": "Camp Jefferson utilities for banner production",
   "main": "index.js",
   "scripts": {
@@ -8,9 +8,11 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "bin": {
+    "campj-banners-quickbuild": "./cli-quickbuild.js",
     "campj-banners-dev": "./cli-dev.js",
     "campj-banners-build": "./cli-build.js",
-    "campj-banners-cleanup": "./cli-cleanup.js"
+    "campj-banners-cleanup": "./cli-cleanup.js",
+    "campj-banners-rename": "./cli-rename.js"
   },
   "repository": {
     "type": "git",

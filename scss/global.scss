@@ -39,13 +39,16 @@ figure {
 
 #banner-frame {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: calc(100% - 2px);
-  height: calc(100% - 2px);
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  top: 0px;
+  left: 0px;
+  border: 1px solid black;
+  width: 100%;
+  height: 100%;
   display: block;
   pointer-events: none;
-  border: 1px solid black;
   // box-shadow: inset 0px 0px 0px 1px black;
 }
 
