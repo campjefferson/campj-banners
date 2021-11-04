@@ -145,6 +145,7 @@ async function captureAllBanners(banners, delay = 15000) {
       "--disable-gpu",
       "--no-sandbox",
       "--enable-logging",
+      "--disable-dev-shm-usage",
     ],
     // executablePath:
     //   "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",

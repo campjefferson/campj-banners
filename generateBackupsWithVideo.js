@@ -9,9 +9,8 @@ const baseDirName =
     ? process.argv[process.argv.indexOf("--dir") + 1]
     : null;
 
-let baseDir = (baseDirName
-  ? path.resolve(process.cwd(), baseDirName)
-  : process.cwd()
+let baseDir = (
+  baseDirName ? path.resolve(process.cwd(), baseDirName) : process.cwd()
 ).replace(/\\/g, "/");
 
 const wrapperId =
@@ -94,9 +93,11 @@ async function captureBanner(browser, bannerPath, delay) {
 
     const [width, height, errors] = await page.evaluate(
       (wrapperId, wrapperClass, selectorsToHide) => {
-        let el = wrapperClass
+        let el = wrapperId
+          ? document.getElementById(wrapperId)
+          : wrapperClass
           ? document.querySelector(`.${wrapperClass}`)
-          : document.getElementById(wrapperId);
+          : null;
         let errors;
         try {
           if (selectorsToHide) {
@@ -128,12 +129,16 @@ async function captureBanner(browser, bannerPath, delay) {
       console.log(chalk.red.bold(`errors`), errors);
       return Promise.resolve();
     }
+    await page.setViewport({
+      width: width,
+      height: height,
+      deviceScaleFactor: 1,
+    });
     await timeout(delay);
     await page.screenshot({
       path: fileName,
       type: `jpeg`,
       quality: quality,
-      clip: { x: 0, y: 0, width, height },
     });
 
     await page.close();
@@ -167,6 +172,7 @@ async function captureAllBanners(banners, delay = 15000) {
       "--enable-logging",
       "--disable-dev-shm-usage",
       "--ignore-certificate-errors",
+      "--disable-dev-shm-usage",
     ],
     executablePath:
       platform === `mac`
@@ -196,5 +202,4 @@ async function generate(dir, delay = 20000) {
   cmd.run(`kill -9 $(lsof -t -i tcp:8080)`);
 }
 
-console.log("HIHIHIHIH");
 generate(baseDir);

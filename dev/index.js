@@ -5,6 +5,7 @@ var buttons;
 var select;
 var hiddenSelectContainer;
 var storedIframeProps = {};
+var currentOption;
 
 function setIframeTo(url, width, height, title) {
   storedIframeProps.url = url;
@@ -54,6 +55,7 @@ function onHashChange() {
     if (select) {
       select.value = hash;
       var opt = document.querySelector('option[value="' + hash + '"]');
+      currentOption = opt;
       var data = opt.dataset;
       setIframeTo(data.url, data.width, data.height, data.title);
     }
@@ -63,6 +65,43 @@ function onHashChange() {
 function handleReplay() {
   var frame = document.getElementById("banner-frame");
   frame.contentWindow.location.reload();
+}
+
+function handlePrev() {
+  if (!select) {
+    return;
+  }
+  var targetIndex = select.selectedIndex - 1;
+  if (targetIndex === -1) {
+    targetIndex = select.options.length - 1;
+  }
+  while (select.options[targetIndex] && select.options[targetIndex].disabled) {
+    targetIndex--;
+    if (targetIndex === -1) {
+      targetIndex = select.options.length - 1;
+    }
+  }
+  select.selectedIndex = targetIndex;
+  select.dispatchEvent(new Event("change"));
+}
+
+function handleNext() {
+  if (!select) {
+    return;
+  }
+  var targetIndex = select.selectedIndex + 1;
+  if (targetIndex >= select.options.length) {
+    targetIndex = 0;
+  }
+
+  while (select.options[targetIndex] && select.options[targetIndex].disabled) {
+    targetIndex++;
+    if (targetIndex >= select.options.length) {
+      targetIndex = 0;
+    }
+  }
+  select.selectedIndex = targetIndex;
+  select.dispatchEvent(new Event("change"));
 }
 
 document.addEventListener("DOMContentLoaded", function () {
@@ -85,6 +124,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
   replayButton = document.getElementById("replay");
   replayButton.addEventListener("click", handleReplay);
+
+  prevButton = document.getElementById("prev");
+  prevButton.addEventListener("click", handlePrev);
+
+  nextButton = document.getElementById("next");
+  nextButton.addEventListener("click", handleNext);
 
   onHashChange();
 });

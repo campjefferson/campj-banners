@@ -12,6 +12,10 @@ const backupQualities = config.backupQualities || {};
 
 const bannerSelector = config.bannerSelector || null;
 
+const selectorsToHide = config.backupSelectorsToHide || null;
+const selectorsToShow = config.backupSelectorsToShow || null;
+const selectorStyles = config.backupSelectorStyles || null;
+
 function timeout(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -39,6 +43,37 @@ async function captureBanner(browser, bannerPath, delay) {
     backupQualities[path.basename(fileNamePart)] || backupQuality;
   // console.log({ file: path.basename(fileNamePart), screenshotQuality });
 
+  let bSelectorsToHide = null;
+  let bSelectorsToShow = null;
+  let foundSelectors;
+
+  if (selectorsToHide) {
+    foundSelectors = selectorsToHide.find(
+      (item) => item.name && bannerPath.indexOf(item.name) >= 0
+    );
+    bSelectorsToHide = foundSelectors
+      ? foundSelectors.selectors
+      : selectorsToHide.filter((item) => typeof item === `string`);
+  }
+  foundSelectors = null;
+  if (selectorsToShow) {
+    foundSelectors = selectorsToShow.find(
+      (item) => item.name && bannerPath.indexOf(item.name) >= 0
+    );
+    // if (foundSelectors) {
+    //   console.log({ bannerPath, selectors: foundSelectors.selectors });
+    // }
+    bSelectorsToShow = foundSelectors
+      ? foundSelectors.selectors
+      : selectorsToShow.filter((item) => typeof item === `string`);
+  }
+
+  const backupSelectorStyles = selectorStyles
+    ? selectorStyles.find((item) => bannerPath.indexOf(item.name) >= 0)
+    : null;
+
+  // console.log({ bannerPath, bSelectorsToHide, bSelectorsToShow });
+
   const [width, height] = await page.evaluate((bannerSelector) => {
     let el = bannerSelector
       ? document.querySelector(bannerSelector)
@@ -64,19 +99,95 @@ async function captureBanner(browser, bannerPath, delay) {
     height: height,
     deviceScaleFactor: 1,
   });
+
   await timeout(delay);
-  await page.screenshot({
-    path: fileName,
-    type: `jpeg`,
-    quality: screenshotQuality,
-  });
+
+  if (bSelectorsToHide || bSelectorsToShow || backupSelectorStyles) {
+    const [errors] = await page.evaluate(
+      (bannerSelector, selectorsToHide, selectorsToShow, selectorStyles) => {
+        let el = bannerSelector
+          ? document.querySelector(bannerSelector)
+          : document.getElementById("ad");
+
+        let errors = [];
+        try {
+          if (selectorsToHide) {
+            Array.from(
+              document.querySelectorAll(selectorsToHide.join(","))
+            ).forEach((el) => {
+              el.style.visibility = `hidden`;
+            });
+          }
+          if (selectorsToShow) {
+            Array.from(
+              document.querySelectorAll(selectorsToShow.join(","))
+            ).forEach((el) => {
+              el.style.visibility = `visible`;
+              el.style.opacity = 1;
+              el.style.transform = `translate3d(0, 0, 0)`;
+            });
+          }
+          if (selectorStyles) {
+            for (let i = 0; i < selectorStyles.styles.length; i++) {
+              let s = selectorStyles.styles[i];
+              let el = document.querySelector(s.selector);
+              let keys = Object.keys(s.style);
+              for (let k = 0; k < keys.length; k++) {
+                let key = keys[k];
+                el.style[key] = s.style[key];
+              }
+            }
+          }
+        } catch (e) {
+          errors.push(e);
+        }
+        if (errors.length) {
+          return [errors];
+        }
+        return [true];
+      },
+      bannerSelector,
+      bSelectorsToHide,
+      bSelectorsToShow,
+      backupSelectorStyles
+    );
+
+    if (errors.length) {
+      console.log({ errors });
+    }
+  }
+
+  let screenshotError = false;
+
+  await page
+    .screenshot({
+      path: fileName,
+      type: `jpeg`,
+      quality: screenshotQuality,
+      captureBeyondViewport: false,
+      fullPage: false,
+    })
+    .catch((e) => {
+      screenshotError = true;
+      console.log(
+        chalk.red.bold(`error`),
+        "backup image for",
+        bannerName,
+        "was not generated due to an error:"
+      );
+      console.log(e);
+    });
+
   await page.close();
-  console.log(
-    chalk.green.bold(`success`),
-    "backup image for",
-    bannerName,
-    "was generated."
-  );
+
+  if (!screenshotError) {
+    console.log(
+      chalk.green.bold(`success`),
+      "backup image for",
+      bannerName,
+      "was generated."
+    );
+  }
 
   await timeout(10);
   let stats = fs.statSync(fileName);
@@ -93,7 +204,9 @@ async function captureBanner(browser, bannerPath, delay) {
 }
 
 async function captureAllBanners(banners, delay = 15000) {
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    args: ["--disable-dev-shm-usage"],
+  });
   browser.setMaxListeners(100);
   await Promise.all(banners.map((b) => captureBanner(browser, b, delay)));
   await browser.close();
